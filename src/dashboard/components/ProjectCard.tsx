@@ -45,14 +45,7 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
       <div className="pl-2">
         {/* Header */}
         <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm text-gray-100">{name}</h3>
-            {isActive && state.gitBranch && (
-              <span className="text-xs text-gray-500 font-mono">
-                {state.gitBranch}
-              </span>
-            )}
-          </div>
+          <h3 className="font-semibold text-sm text-gray-100">{name}</h3>
           <div className="flex items-center gap-1">
             {isActive && state.gitStatusSummary && (
               <span
@@ -108,10 +101,17 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
           </div>
         )}
 
+        {/* Git branch */}
+        {state.gitBranch && (
+          <p className="text-xs text-gray-500 font-mono truncate mb-0.5">
+            {state.gitBranch}
+          </p>
+        )}
+
         {/* State description */}
         {state.stateDescription && (
           <p className="text-xs text-gray-500 italic truncate">
-            "{state.stateDescription}"
+            {state.stateDescription}
           </p>
         )}
       </div>
