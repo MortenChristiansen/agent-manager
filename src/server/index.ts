@@ -1,5 +1,5 @@
 import { loadConfig, ensureDirs } from "./config";
-import { buildProjectsWithState, loadProjectState, saveProjectState } from "./state";
+import { buildProjectsWithState, loadProjectState } from "./state";
 import { getGitInfo } from "./git";
 import {
   watchAgentProjectStatus,
@@ -18,18 +18,6 @@ ensureDirs();
 
 const config = loadConfig();
 const port = config.dashboard.port;
-
-// --- Startup: reset all projects to dormant ---
-
-for (const name of Object.keys(config.projects)) {
-  const state = loadProjectState(name);
-  if (state.status === "active") {
-    state.status = "dormant";
-    state.desktopName = null;
-    state.windowHandles = {};
-    saveProjectState(name, state);
-  }
-}
 
 // Track previous tab states for processing->idle detection
 const previousTabStates = new Map<string, Map<string, string>>();

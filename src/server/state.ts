@@ -22,6 +22,17 @@ const DEFAULT_STATE: ProjectState = {
   gitStatusSummary: "",
 };
 
+// Status is transient (in-memory only), always starts dormant
+const runtimeStatus = new Map<string, ProjectState["status"]>();
+
+export function getProjectStatus(name: string): ProjectState["status"] {
+  return runtimeStatus.get(name) ?? "dormant";
+}
+
+export function setProjectStatus(name: string, status: ProjectState["status"]) {
+  runtimeStatus.set(name, status);
+}
+
 export function loadProjectState(name: string): ProjectState {
   const path = projectStatePath(name);
   if (!existsSync(path)) return { ...DEFAULT_STATE };
@@ -29,7 +40,9 @@ export function loadProjectState(name: string): ProjectState {
   try {
     const raw = readFileSync(path, "utf-8");
     const parsed = YAML.parse(raw) ?? {};
-    return ProjectStateSchema.parse(parsed);
+    const state = ProjectStateSchema.parse(parsed);
+    state.status = getProjectStatus(name);
+    return state;
   } catch {
     return { ...DEFAULT_STATE };
   }
@@ -37,7 +50,8 @@ export function loadProjectState(name: string): ProjectState {
 
 export function saveProjectState(name: string, state: ProjectState) {
   ensureDirs();
-  writeFileSync(projectStatePath(name), YAML.stringify(state), "utf-8");
+  const { status, ...persisted } = state;
+  writeFileSync(projectStatePath(name), YAML.stringify(persisted), "utf-8");
 }
 
 export function loadTabStatus(projectPath: string): TabStatus[] {

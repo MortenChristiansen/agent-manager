@@ -3,6 +3,7 @@ import {
   buildProjectsWithState,
   loadProjectState,
   saveProjectState,
+  setProjectStatus,
 } from "../state";
 import { broadcast } from "./websocket";
 import { closeWindowsOnDesktop, createDesktop, removeDesktop, switchToDesktop } from "../desktop";
@@ -44,8 +45,8 @@ export async function handleApiRequest(
     }
 
     // Broadcast activating state immediately so UI shows loading
+    setProjectStatus(name, "activating");
     const earlyState = loadProjectState(name);
-    earlyState.status = "activating";
     earlyState.desktopName = name;
     saveProjectState(name, earlyState);
     broadcast({ type: "projects", data: buildProjectsWithState(config) });
@@ -60,8 +61,8 @@ export async function handleApiRequest(
       profile: projectConfig.terminal?.profile ?? config.defaults.terminal.profile,
     });
 
+    setProjectStatus(name, "active");
     const state = loadProjectState(name);
-    state.status = "active";
     state.lastActivated = new Date().toISOString();
     state.desktopName = name;
     if (terminalPid) state.windowHandles = { terminal: terminalPid };
@@ -85,12 +86,12 @@ export async function handleApiRequest(
       stateDescription?: string;
     };
 
+    setProjectStatus(name, "dormant");
     const state = loadProjectState(name);
     closeWindowsOnDesktop(name);
     switchToDesktop("Desktop 1");
     removeDesktop(name);
 
-    state.status = "dormant";
     state.lastDeactivated = new Date().toISOString();
     state.desktopName = null;
     state.windowHandles = {};
