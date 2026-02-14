@@ -58,7 +58,7 @@ export const ProjectStateSchema = z.object({
   status: z.enum(["active", "dormant"]).default("dormant"),
   lastActivated: z.string().nullable().default(null),
   lastDeactivated: z.string().nullable().default(null),
-  desktopIndex: z.number().nullable().default(null),
+  desktopName: z.string().nullable().default(null),
   windowHandles: z.record(z.string(), z.number()).default({}),
   stateDescription: z.string().default(""),
   gitBranch: z.string().default(""),
@@ -102,7 +102,8 @@ export type WSMessage =
   | { type: "projects"; data: ProjectWithState[] }
   | { type: "projectUpdate"; data: ProjectWithState }
   | { type: "prompt"; data: PromptEntry }
-  | { type: "tabStatus"; project: string; data: TabStatus[] };
+  | { type: "tabStatus"; project: string; data: TabStatus[] }
+  | { type: "currentDesktop"; data: string };
 
 export interface ProjectWithState {
   name: string;

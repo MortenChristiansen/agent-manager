@@ -3,16 +3,38 @@ import { TabStatus } from "./TabStatus";
 
 interface Props {
   project: ProjectWithState;
+  isCurrent?: boolean;
   onActivate: (name: string) => void;
   onDeactivate: (name: string) => void;
+  onSwitch?: (name: string) => void;
 }
 
-export function ProjectCard({ project, onActivate, onDeactivate }: Props) {
+export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch }: Props) {
   const { name, config, state, tabs } = project;
   const isActive = state.status === "active";
 
+  const handleCardClick = () => {
+    if (isActive && !isCurrent && onSwitch) {
+      onSwitch(name);
+    }
+  };
+
   return (
-    <div className="group relative rounded-lg border border-gray-800 bg-gray-900/50 p-3 hover:border-gray-700 transition-colors">
+    <div
+      onClick={handleCardClick}
+      className={`group relative rounded-lg border bg-gray-900/50 p-3 transition-colors ${
+        isActive && isCurrent
+          ? "border-opacity-80"
+          : isActive && onSwitch
+            ? "border-gray-800 hover:border-gray-600 cursor-pointer"
+            : "border-gray-800 hover:border-gray-700"
+      }`}
+      style={
+        isActive && isCurrent
+          ? { borderColor: config.color }
+          : undefined
+      }
+    >
       {/* Color accent bar */}
       <div
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg"
@@ -44,7 +66,7 @@ export function ProjectCard({ project, onActivate, onDeactivate }: Props) {
             )}
             {isActive ? (
               <button
-                onClick={() => onDeactivate(name)}
+                onClick={(e) => { e.stopPropagation(); onDeactivate(name); }}
                 className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-red-400 transition-colors"
                 title="Deactivate"
               >

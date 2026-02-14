@@ -15,7 +15,7 @@ const DEFAULT_STATE: ProjectState = {
   status: "dormant",
   lastActivated: null,
   lastDeactivated: null,
-  desktopIndex: null,
+  desktopName: null,
   windowHandles: {},
   stateDescription: "",
   gitBranch: "",

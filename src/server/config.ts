@@ -15,7 +15,7 @@ dashboard:
 
 defaults:
   terminal:
-    profile: "Ubuntu"
+    profile: "WSL"
   editor: code
 
 projects: {}

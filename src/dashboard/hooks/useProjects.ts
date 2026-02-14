@@ -21,6 +21,13 @@ export function useProjects() {
     []
   );
 
+  const switchDesktop = useCallback(async (name: string) => {
+    const res = await fetch(`/api/projects/${name}/switch`, {
+      method: "POST",
+    });
+    return res.json();
+  }, []);
+
   const updateState = useCallback(
     async (name: string, updates: Record<string, any>) => {
       const res = await fetch(`/api/projects/${name}/state`, {
@@ -39,5 +46,5 @@ export function useProjects() {
     return { active, dormant };
   }, []);
 
-  return { activate, deactivate, updateState, sortProjects };
+  return { activate, deactivate, switchDesktop, updateState, sortProjects };
 }

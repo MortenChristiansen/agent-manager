@@ -2,10 +2,15 @@ import type { PromptEntry } from "../../shared/types";
 
 interface Props {
   prompts: PromptEntry[];
+  currentProject?: string;
 }
 
-export function PromptFeed({ prompts }: Props) {
-  if (prompts.length === 0) {
+export function PromptFeed({ prompts, currentProject }: Props) {
+  const filtered = currentProject
+    ? prompts.filter((p) => p.project === currentProject)
+    : prompts;
+
+  if (filtered.length === 0) {
     return (
       <div className="text-xs text-gray-600 text-center py-4">
         No recent prompts
@@ -15,7 +20,7 @@ export function PromptFeed({ prompts }: Props) {
 
   return (
     <div className="space-y-2">
-      {prompts.slice(0, 20).map((entry, i) => (
+      {filtered.slice(0, 20).map((entry, i) => (
         <div key={`${entry.timestamp}-${i}`} className="text-xs">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-gray-600 font-mono">

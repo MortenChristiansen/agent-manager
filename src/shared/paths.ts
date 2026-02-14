@@ -21,15 +21,16 @@ export function agentProjectStatusPath(projectPath: string): string {
   return join(agentProjectDir(projectPath), "status.json");
 }
 
+const WSL_DISTRO = process.env.WSL_DISTRO_NAME ?? "Ubuntu-24.04";
+
 /** Convert WSL path to Windows UNC path */
 export function wslToWindows(wslPath: string): string {
-  // /home/user/foo -> \\wsl.localhost\Ubuntu/home/user/foo
-  return `\\\\wsl.localhost\\Ubuntu${wslPath}`;
+  return `\\\\wsl.localhost\\${WSL_DISTRO}${wslPath}`;
 }
 
 /** Convert Windows UNC path back to WSL */
 export function windowsToWsl(winPath: string): string {
-  const prefix = "\\\\wsl.localhost\\Ubuntu";
+  const prefix = `\\\\wsl.localhost\\${WSL_DISTRO}`;
   if (winPath.startsWith(prefix)) {
     return winPath.slice(prefix.length).replace(/\\/g, "/");
   }

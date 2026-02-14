@@ -8,11 +8,16 @@ import { WindowControls } from "./components/WindowControls";
 import type { ProjectWithState } from "../shared/types";
 
 export default function App() {
-  const { projects, prompts, connected } = useWebSocket();
-  const { activate, deactivate, sortProjects } = useProjects();
+  const { projects, prompts, connected, currentDesktop } = useWebSocket();
+  const { activate, deactivate, switchDesktop, sortProjects } = useProjects();
   const [deactivating, setDeactivating] = useState<ProjectWithState | null>(null);
 
   const { active, dormant } = sortProjects(projects);
+
+  // Find project matching the current desktop
+  const currentProject = projects.find(
+    (p) => p.state.status === "active" && p.state.desktopName === currentDesktop
+  );
 
   const handleActivate = async (name: string) => {
     await activate(name);
@@ -27,6 +32,10 @@ export default function App() {
     if (!deactivating) return;
     await deactivate(deactivating.name, stateDescription);
     setDeactivating(null);
+  };
+
+  const handleSwitch = async (name: string) => {
+    await switchDesktop(name);
   };
 
   return (
@@ -57,8 +66,10 @@ export default function App() {
                   <ProjectCard
                     key={p.name}
                     project={p}
+                    isCurrent={currentProject?.name === p.name}
                     onActivate={handleActivate}
                     onDeactivate={handleDeactivateClick}
+                    onSwitch={handleSwitch}
                   />
                 ))}
               </div>
@@ -99,7 +110,7 @@ export default function App() {
             <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
               Recent Prompts
             </h2>
-            <PromptFeed prompts={prompts} />
+            <PromptFeed prompts={prompts} currentProject={currentProject?.name} />
           </section>
         </div>
       </div>

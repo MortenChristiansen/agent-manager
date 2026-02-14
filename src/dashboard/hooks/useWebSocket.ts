@@ -5,14 +5,16 @@ interface UseWebSocketReturn {
   projects: ProjectWithState[];
   prompts: PromptEntry[];
   connected: boolean;
+  currentDesktop: string;
 }
 
 export function useWebSocket(): UseWebSocketReturn {
   const [projects, setProjects] = useState<ProjectWithState[]>([]);
   const [prompts, setPrompts] = useState<PromptEntry[]>([]);
   const [connected, setConnected] = useState(false);
+  const [currentDesktop, setCurrentDesktop] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     let active = true;
@@ -52,6 +54,10 @@ export function useWebSocket(): UseWebSocketReturn {
                 )
               );
               break;
+
+            case "currentDesktop":
+              setCurrentDesktop(msg.data);
+              break;
           }
         } catch {
           // ignore parse errors
@@ -77,5 +83,5 @@ export function useWebSocket(): UseWebSocketReturn {
     };
   }, []);
 
-  return { projects, prompts, connected };
+  return { projects, prompts, connected, currentDesktop };
 }

@@ -13,11 +13,15 @@ app.whenReady().then(() => {
     frame: false,
     alwaysOnTop: true,
     resizable: true,
+    skipTaskbar: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.mjs'),
       sandbox: false,
     },
   });
+
+  // Pin to all virtual desktops (Linux/macOS native; Windows handled via VirtualDesktop11)
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
   // Dev: Vite HMR, Prod: Bun server
   const url = process.env.VITE_DEV_SERVER_URL || 'http://localhost:7890';

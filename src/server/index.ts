@@ -9,6 +9,7 @@ import {
 import { handleApiRequest } from "./api/routes";
 import { addClient, removeClient, broadcast } from "./api/websocket";
 import { playNotificationSound } from "./powershell";
+import { getCurrentDesktopName, pinWindow } from "./desktop";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
@@ -16,6 +17,18 @@ ensureDirs();
 
 const config = loadConfig();
 const port = config.dashboard.port;
+
+// --- Startup: reset all projects to dormant ---
+
+for (const name of Object.keys(config.projects)) {
+  const state = loadProjectState(name);
+  if (state.status === "active") {
+    state.status = "dormant";
+    state.desktopName = null;
+    state.windowHandles = {};
+    saveProjectState(name, state);
+  }
+}
 
 // Track previous tab states for processing->idle detection
 const previousTabStates = new Map<string, Map<string, string>>();
@@ -82,6 +95,24 @@ setInterval(pollGit, GIT_POLL_INTERVAL);
 // Initial poll
 pollGit();
 
+// --- Desktop polling (1s) ---
+
+let lastDesktopName = "";
+
+function pollDesktop() {
+  try {
+    const current = getCurrentDesktopName();
+    if (current && current !== lastDesktopName) {
+      lastDesktopName = current;
+      broadcast({ type: "currentDesktop", data: current });
+    }
+  } catch {
+    // ignore polling errors
+  }
+}
+
+setInterval(pollDesktop, 1000);
+
 // --- Serve dashboard static files in production ---
 
 function serveDashboard(url: URL): Response | null {
@@ -146,9 +177,13 @@ const server = Bun.serve({
       // Send initial state
       const projects = buildProjectsWithState(config);
       ws.send(JSON.stringify({ type: "projects", data: projects }));
+      // Send current desktop
+      if (lastDesktopName) {
+        ws.send(JSON.stringify({ type: "currentDesktop", data: lastDesktopName }));
+      }
     },
     message(_ws, _message) {
-      // Client doesn't send messages in Phase 1
+      // Client doesn't send messages yet
     },
     close(ws) {
       removeClient(ws);
@@ -157,6 +192,11 @@ const server = Bun.serve({
 });
 
 console.log(`Agent Manager server running on http://localhost:${port}`);
+
+// Pin Electron window after short delay to ensure it's up
+setTimeout(() => {
+  pinWindow("Agent Manager");
+}, 2000);
 
 // Cleanup on exit
 process.on("SIGINT", () => {

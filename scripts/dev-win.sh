@@ -37,8 +37,8 @@ trap cleanup EXIT
 # Wait for both to be ready
 echo "[dev-win] Waiting for servers..."
 while ! curl -s http://localhost:7890 > /dev/null 2>&1; do sleep 0.5; done
-while ! curl -s http://localhost:5173 > /dev/null 2>&1; do sleep 0.5; done
+while ! curl -s http://localhost:5891 > /dev/null 2>&1; do sleep 0.5; done
 
 # Launch Electron on Windows with user-data-dir to avoid cache permission errors
 echo "[dev-win] Launching Electron on Windows..."
-powershell.exe -NoProfile -Command "cd '$WIN_PATH'; \$env:VITE_DEV_SERVER_URL='http://localhost:5173'; npx electron . --user-data-dir='$WIN_PATH/electron-data'"
+powershell.exe -NoProfile -Command "cd '$WIN_PATH'; \$env:VITE_DEV_SERVER_URL='http://localhost:5891'; npx electron . --user-data-dir='$WIN_PATH/electron-data'"
