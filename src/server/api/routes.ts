@@ -140,7 +140,7 @@ export async function handleApiRequest(
     setProjectStatus(name, "dormant");
     const state = loadProjectState(name);
     closeWindowsOnDesktop(name);
-    switchToDesktop("Desktop 1");
+    switchToDesktop("0");
     removeDesktop(name);
 
     state.lastDeactivated = new Date().toISOString();
