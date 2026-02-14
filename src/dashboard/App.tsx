@@ -52,10 +52,9 @@ export default function App() {
         <WindowControls />
       </header>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Projects */}
+      <div className="overflow-y-auto shrink-0 max-h-[50%]">
         <div className="p-3 space-y-4">
-          {/* Active projects */}
           {active.length > 0 && (
             <section>
               <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
@@ -76,7 +75,6 @@ export default function App() {
             </section>
           )}
 
-          {/* Dormant projects */}
           {dormant.length > 0 && (
             <section>
               <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
@@ -104,16 +102,18 @@ export default function App() {
               </span>
             </div>
           )}
-
-          {/* Recent Prompts */}
-          <section>
-            <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
-              Recent Prompts
-            </h2>
-            <PromptFeed prompts={prompts} currentProject={currentProject?.name} />
-          </section>
         </div>
       </div>
+
+      {/* Recent Prompts — own scroll area */}
+      <section className="flex-1 min-h-0 flex flex-col border-t border-gray-800">
+        <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 pt-3 pb-2 shrink-0">
+          Recent Prompts
+        </h2>
+        <div className="flex-1 overflow-y-auto px-3 pb-3">
+          <PromptFeed prompts={prompts} currentProject={currentProject?.name} />
+        </div>
+      </section>
 
       {/* Deactivation modal */}
       {deactivating && (

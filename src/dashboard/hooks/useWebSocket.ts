@@ -47,6 +47,10 @@ export function useWebSocket(): UseWebSocketReturn {
               setPrompts((prev) => [msg.data, ...prev].slice(0, 50));
               break;
 
+            case "prompts":
+              setPrompts(msg.data.slice(0, 50));
+              break;
+
             case "tabStatus":
               setProjects((prev) =>
                 prev.map((p) =>

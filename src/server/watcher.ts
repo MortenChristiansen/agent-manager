@@ -42,6 +42,40 @@ export function watchAgentProjectStatus(
   }
 }
 
+export function loadRecentPrompts(
+  count: number,
+  projectPaths: Map<string, string> // path -> name
+): PromptEntry[] {
+  if (!existsSync(CLAUDE_HISTORY_PATH)) return [];
+
+  try {
+    const content = readFileSync(CLAUDE_HISTORY_PATH, "utf-8");
+    const lines = content.split("\n").filter(Boolean);
+    const recent = lines.slice(-count);
+    const entries: PromptEntry[] = [];
+
+    for (const line of recent) {
+      try {
+        const entry = HistoryEntrySchema.parse(JSON.parse(line));
+        const projectName = entry.project
+          ? projectPaths.get(entry.project) ?? basename(entry.project)
+          : "unknown";
+        entries.push({
+          timestamp: entry.timestamp,
+          project: projectName,
+          text: entry.display,
+        });
+      } catch {
+        // skip malformed
+      }
+    }
+
+    return entries.reverse(); // newest first
+  } catch {
+    return [];
+  }
+}
+
 export function watchPromptHistory(
   onPrompt: PromptCallback,
   projectPaths: Map<string, string> // path -> name

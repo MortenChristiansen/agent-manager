@@ -102,6 +102,7 @@ export type WSMessage =
   | { type: "projects"; data: ProjectWithState[] }
   | { type: "projectUpdate"; data: ProjectWithState }
   | { type: "prompt"; data: PromptEntry }
+  | { type: "prompts"; data: PromptEntry[] }
   | { type: "tabStatus"; project: string; data: TabStatus[] }
   | { type: "currentDesktop"; data: string };
 

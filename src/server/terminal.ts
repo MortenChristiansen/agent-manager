@@ -51,8 +51,3 @@ export async function launchTerminal({ projectName, wslPath, profile }: LaunchOp
   console.warn(`Could not detect new WindowsTerminal PID for ${projectName}`);
   return null;
 }
-
-/** Kill a Windows Terminal process by PID */
-export function closeTerminal(pid: number) {
-  runPowerShell(`Stop-Process -Id ${pid} -Force -ErrorAction SilentlyContinue`);
-}

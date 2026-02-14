@@ -4,6 +4,7 @@ import { getGitInfo } from "./git";
 import {
   watchAgentProjectStatus,
   watchPromptHistory,
+  loadRecentPrompts,
   closeAllWatchers,
 } from "./watcher";
 import { handleApiRequest } from "./api/routes";
@@ -177,6 +178,9 @@ const server = Bun.serve({
       // Send initial state
       const projects = buildProjectsWithState(config);
       ws.send(JSON.stringify({ type: "projects", data: projects }));
+      // Send recent prompt history
+      const recentPrompts = loadRecentPrompts(50, projectPathToName);
+      ws.send(JSON.stringify({ type: "prompts", data: recentPrompts }));
       // Send current desktop
       if (lastDesktopName) {
         ws.send(JSON.stringify({ type: "currentDesktop", data: lastDesktopName }));

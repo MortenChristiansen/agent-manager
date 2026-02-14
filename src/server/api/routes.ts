@@ -5,8 +5,8 @@ import {
   saveProjectState,
 } from "../state";
 import { broadcast } from "./websocket";
-import { createDesktop, removeDesktop, switchToDesktop } from "../desktop";
-import { launchTerminal, closeTerminal } from "../terminal";
+import { closeWindowsOnDesktop, createDesktop, removeDesktop, switchToDesktop } from "../desktop";
+import { launchTerminal } from "../terminal";
 import type { ProjectState } from "../../shared/types";
 
 export async function handleApiRequest(
@@ -79,9 +79,7 @@ export async function handleApiRequest(
     };
 
     const state = loadProjectState(name);
-    if (state.windowHandles.terminal) {
-      closeTerminal(state.windowHandles.terminal);
-    }
+    closeWindowsOnDesktop(name);
     switchToDesktop("Desktop 1");
     removeDesktop(name);
 
