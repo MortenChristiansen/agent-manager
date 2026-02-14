@@ -14,9 +14,9 @@ export default function App() {
 
   const { active, dormant } = sortProjects(projects);
 
-  // Find project matching the current desktop
+  // Find project matching the current virtual desktop
   const currentProject = projects.find(
-    (p) => (p.state.status === "active" || p.state.status === "activating") && p.state.desktopName === currentDesktop
+    (p) => p.state.desktopName && p.state.desktopName === currentDesktop
   );
 
   const handleActivate = async (name: string) => {

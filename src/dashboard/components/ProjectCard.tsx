@@ -24,16 +24,14 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
     <div
       onClick={handleCardClick}
       className={`group relative rounded-lg border bg-gray-900/50 p-3 transition-colors ${
-        isActivating
-          ? "border-gray-700"
-          : isActive && isCurrent
-            ? "border-opacity-80"
-            : isActive && onSwitch
-              ? "border-gray-800 hover:border-gray-600 cursor-pointer"
-              : "border-gray-800 hover:border-gray-700"
+        isCurrent
+          ? "border-opacity-80"
+          : isActive && onSwitch
+            ? "border-gray-800 hover:border-gray-600 cursor-pointer"
+            : "border-gray-800 hover:border-gray-700"
       }`}
       style={
-        isActive && isCurrent
+        isCurrent
           ? { borderColor: config.color }
           : undefined
       }
