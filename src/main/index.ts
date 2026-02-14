@@ -1,7 +1,62 @@
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import path from 'path';
+import { spawn, ChildProcess } from 'child_process';
+import http from 'http';
 
-app.whenReady().then(() => {
+const isDev = !!process.env.VITE_DEV_SERVER_URL;
+
+function winPathToWsl(winPath: string): string {
+  const m = winPath.match(/^([A-Za-z]):\\(.*)$/);
+  if (!m) return winPath;
+  return `/mnt/${m[1].toLowerCase()}/${m[2].replace(/\\/g, '/')}`;
+}
+
+function pollServer(url: string, timeout = 15000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const check = () => {
+      http.get(url, (res) => {
+        res.resume();
+        resolve();
+      }).on('error', () => {
+        if (Date.now() - start > timeout) reject(new Error('Server start timeout'));
+        else setTimeout(check, 200);
+      });
+    };
+    check();
+  });
+}
+
+let serverProcess: ChildProcess | null = null;
+
+async function startServer(): Promise<void> {
+  // __dirname is like C:\Users\morten\.agent-manager\out\main
+  const appRoot = path.resolve(__dirname, '../..');
+  const wslRoot = winPathToWsl(appRoot);
+
+  // cd first (bun can't resolve absolute /mnt/c paths) and use ~/.bun/bin/bun
+  // to avoid picking up Windows bun from PATH
+  const cmd = `cd ${wslRoot} && ~/.bun/bin/bun dist/server/index.js`;
+  console.log(`[main] Starting server: wsl.exe bash -lc "${cmd}"`);
+  serverProcess = spawn('wsl.exe', ['bash', '-lc', cmd], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  serverProcess.stdout?.on('data', (d) => process.stdout.write(`[server] ${d}`));
+  serverProcess.stderr?.on('data', (d) => process.stderr.write(`[server] ${d}`));
+  serverProcess.on('exit', (code) => console.log(`[main] Server exited (${code})`));
+
+  await pollServer('http://localhost:7890');
+  console.log('[main] Server ready');
+}
+
+app.whenReady().then(async () => {
+  if (!isDev) {
+    const appRoot = path.resolve(__dirname, '../..');
+    app.setPath('userData', path.join(appRoot, 'electron-data'));
+    await startServer();
+  }
+
   const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
   const [winW, winH] = [380, 900];
 
@@ -24,14 +79,18 @@ app.whenReady().then(() => {
     },
   });
 
-  // Pin to all virtual desktops (Linux/macOS native; Windows handled via VirtualDesktop11)
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  // Dev: Vite HMR, Prod: Bun server
   const url = process.env.VITE_DEV_SERVER_URL || 'http://localhost:7890';
   win.loadURL(url);
 
-  // IPC for window controls
   ipcMain.on('win:minimize', () => win.minimize());
   ipcMain.on('win:close', () => app.quit());
+});
+
+app.on('will-quit', () => {
+  if (serverProcess && !serverProcess.killed) {
+    console.log('[main] Killing server process');
+    serverProcess.kill();
+  }
 });

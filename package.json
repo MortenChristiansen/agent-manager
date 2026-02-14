@@ -11,7 +11,8 @@
     "build": "vite build && bun build src/server/index.ts --outdir dist/server --target bun",
     "build:electron": "bunx electron-vite build",
     "start": "bun src/server/index.ts",
-    "cli": "bun src/cli/index.ts"
+    "cli": "bun src/cli/index.ts",
+    "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.0",
