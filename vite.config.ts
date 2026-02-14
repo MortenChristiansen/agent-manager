@@ -15,8 +15,10 @@ export default defineConfig({
       "@dashboard": path.resolve(__dirname, "src/dashboard"),
     },
   },
+  clearScreen: false,
   server: {
     port: 5173,
+    strictPort: true,
     proxy: {
       "/api": "http://localhost:7890",
       "/ws": {

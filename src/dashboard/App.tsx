@@ -4,6 +4,7 @@ import { useProjects } from "./hooks/useProjects";
 import { ProjectCard } from "./components/ProjectCard";
 import { PromptFeed } from "./components/PromptFeed";
 import { DeactivationModal } from "./components/DeactivationModal";
+import { WindowControls } from "./components/WindowControls";
 import type { ProjectWithState } from "../shared/types";
 
 export default function App() {
@@ -31,7 +32,7 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col bg-gray-950 text-gray-100 overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0">
+      <header style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} className="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0">
         <div className="flex items-center gap-2">
           <h1 className="text-sm font-bold tracking-tight">Agent Manager</h1>
           <span
@@ -39,6 +40,7 @@ export default function App() {
             title={connected ? "Connected" : "Disconnected"}
           />
         </div>
+        <WindowControls />
       </header>
 
       {/* Scrollable content */}

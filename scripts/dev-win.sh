@@ -24,14 +24,14 @@ fi
 
 # Start backend server and Vite dev server in background
 echo "[dev-win] Starting backend server..."
-bun run dev:server &
+bun --watch src/server/index.ts &
 SERVER_PID=$!
 
 echo "[dev-win] Starting Vite dev server..."
-bun run dev:dashboard &
+bunx vite &
 VITE_PID=$!
 
-cleanup() { kill $SERVER_PID $VITE_PID 2>/dev/null; }
+cleanup() { kill $SERVER_PID $VITE_PID 2>/dev/null; wait $SERVER_PID $VITE_PID 2>/dev/null; exit 0; }
 trap cleanup EXIT
 
 # Wait for both to be ready
