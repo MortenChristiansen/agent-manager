@@ -1,16 +1,15 @@
 import { loadConfig, ensureDirs } from "./config";
-import { buildProjectsWithState, loadProjectState } from "./state";
+import { buildProjectsWithState, loadProjectState, saveProjectState } from "./state";
 import { getGitInfo } from "./git";
 import {
-  watchAgentProjectStatus,
   watchPromptHistory,
   loadRecentPrompts,
   closeAllWatchers,
 } from "./watcher";
 import { handleApiRequest } from "./api/routes";
 import { addClient, removeClient, broadcast } from "./api/websocket";
-import { playNotificationSound } from "./powershell";
 import { getCurrentDesktopName, pinWindow } from "./desktop";
+import { registerProjectWatcher, projectPathToName } from "./projectRegistry";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
@@ -19,33 +18,11 @@ ensureDirs();
 const config = loadConfig();
 const port = config.dashboard.port;
 
-// Track previous tab states for processing->idle detection
-const previousTabStates = new Map<string, Map<string, string>>();
-
 // --- File watchers ---
 
 // Watch .agent-project/status.json for each project
 for (const [name, project] of Object.entries(config.projects)) {
-  watchAgentProjectStatus(name, project.path, (projectName, tabs) => {
-    // Check for processing -> idle transitions (sound notification)
-    const prev = previousTabStates.get(projectName) ?? new Map();
-    for (const tab of tabs) {
-      const prevState = prev.get(tab.tabName);
-      if (prevState === "processing" && tab.state === "idle") {
-        playNotificationSound();
-      }
-      prev.set(tab.tabName, tab.state);
-    }
-    previousTabStates.set(projectName, prev);
-
-    broadcast({ type: "tabStatus", project: projectName, data: tabs });
-  });
-}
-
-// Watch prompt history
-const projectPathToName = new Map<string, string>();
-for (const [name, project] of Object.entries(config.projects)) {
-  projectPathToName.set(project.path, name);
+  registerProjectWatcher(name, project.path);
 }
 
 watchPromptHistory((entry) => {
@@ -57,6 +34,7 @@ watchPromptHistory((entry) => {
 const GIT_POLL_INTERVAL = 10_000;
 
 async function pollGit() {
+  const config = loadConfig();
   for (const [name, project] of Object.entries(config.projects)) {
     const state = loadProjectState(name);
     if (state.status !== "active") continue;
@@ -164,7 +142,7 @@ const server = Bun.serve({
     open(ws) {
       addClient(ws);
       // Send initial state
-      const projects = buildProjectsWithState(config);
+      const projects = buildProjectsWithState(loadConfig());
       ws.send(JSON.stringify({ type: "projects", data: projects }));
       // Send recent prompt history
       const recentPrompts = loadRecentPrompts(50, projectPathToName);

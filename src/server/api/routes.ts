@@ -1,4 +1,6 @@
-import { loadConfig } from "../config";
+import { existsSync } from "fs";
+import { basename } from "path";
+import { loadConfig, saveConfig } from "../config";
 import {
   buildProjectsWithState,
   loadProjectState,
@@ -8,6 +10,7 @@ import {
 import { broadcast } from "./websocket";
 import { closeWindowsOnDesktop, createDesktop, removeDesktop, switchToDesktop } from "../desktop";
 import { launchTerminal } from "../terminal";
+import { registerProjectWatcher } from "../projectRegistry";
 import type { ProjectState } from "../../shared/types";
 
 export async function handleApiRequest(
@@ -21,6 +24,54 @@ export async function handleApiRequest(
     const config = loadConfig();
     const projects = buildProjectsWithState(config);
     return Response.json(projects);
+  }
+
+  // POST /api/projects - add new project
+  if (path === "/api/projects" && req.method === "POST") {
+    const body = (await req.json().catch(() => ({}))) as {
+      name?: string;
+      path?: string;
+      description?: string;
+      color?: string;
+    };
+
+    if (!body.path) {
+      return Response.json({ error: "path is required" }, { status: 400 });
+    }
+
+    // Convert Windows UNC WSL path to Linux path
+    // e.g. \\wsl.localhost\Ubuntu-24.04\home\user\code → /home/user/code
+    let projectPath = body.path.trim();
+    const wslMatch = projectPath.match(/^\\\\wsl[\.\$\\].*?\\[^\\]+\\(.*)/i);
+    if (wslMatch) {
+      projectPath = "/" + wslMatch[1].replace(/\\/g, "/");
+    }
+
+    if (!existsSync(projectPath)) {
+      return Response.json({ error: "Path does not exist" }, { status: 400 });
+    }
+
+    const name = body.name || basename(projectPath);
+    const config = loadConfig();
+
+    if (config.projects[name]) {
+      return Response.json({ error: "Project name already exists" }, { status: 409 });
+    }
+
+    config.projects[name] = {
+      path: projectPath,
+      description: body.description ?? "",
+      color: body.color ?? "#6366f1",
+      terminal: { tabs: [] },
+    };
+    saveConfig(config);
+
+    registerProjectWatcher(name, projectPath);
+
+    const projects = buildProjectsWithState(config);
+    broadcast({ type: "projects", data: projects });
+
+    return Response.json({ ok: true, name });
   }
 
   // GET /api/projects/:name - single project

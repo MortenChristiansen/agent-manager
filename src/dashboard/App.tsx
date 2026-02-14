@@ -4,13 +4,15 @@ import { useProjects } from "./hooks/useProjects";
 import { ProjectCard } from "./components/ProjectCard";
 import { PromptFeed } from "./components/PromptFeed";
 import { DeactivationModal } from "./components/DeactivationModal";
+import { AddProjectModal } from "./components/AddProjectModal";
 import { WindowControls } from "./components/WindowControls";
 import type { ProjectWithState } from "../shared/types";
 
 export default function App() {
   const { projects, prompts, connected, currentDesktop } = useWebSocket();
-  const { activate, deactivate, switchDesktop, sortProjects } = useProjects();
+  const { activate, deactivate, switchDesktop, addProject, sortProjects } = useProjects();
   const [deactivating, setDeactivating] = useState<ProjectWithState | null>(null);
+  const [showAddProject, setShowAddProject] = useState(false);
 
   const { active, dormant } = sortProjects(projects);
 
@@ -38,6 +40,15 @@ export default function App() {
     await switchDesktop(name);
   };
 
+  const handleAddProject = async (data: { name: string; path: string; color: string; description: string }) => {
+    const res = await addProject(data);
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    setShowAddProject(false);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-950 text-gray-100 overflow-hidden">
       {/* Header */}
@@ -48,6 +59,14 @@ export default function App() {
             className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-emerald-400" : "bg-red-400"}`}
             title={connected ? "Connected" : "Disconnected"}
           />
+          <button
+            onClick={() => setShowAddProject(true)}
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+            className="w-5 h-5 flex items-center justify-center rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs transition-colors"
+            title="Add project"
+          >
+            +
+          </button>
         </div>
         <WindowControls />
       </header>
@@ -78,7 +97,7 @@ export default function App() {
           {dormant.length > 0 && (
             <section>
               <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
-                Dormant
+                Inactive
               </h2>
               <div className="space-y-2">
                 {dormant.map((p) => (
@@ -123,6 +142,14 @@ export default function App() {
           project={deactivating}
           onConfirm={handleDeactivateConfirm}
           onCancel={() => setDeactivating(null)}
+        />
+      )}
+
+      {/* Add project modal */}
+      {showAddProject && (
+        <AddProjectModal
+          onSubmit={handleAddProject}
+          onCancel={() => setShowAddProject(false)}
         />
       )}
     </div>

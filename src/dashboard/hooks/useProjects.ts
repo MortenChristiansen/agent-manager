@@ -40,11 +40,23 @@ export function useProjects() {
     []
   );
 
+  const addProject = useCallback(
+    async (data: { name: string; path: string; color?: string; description?: string }) => {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      return res.json();
+    },
+    []
+  );
+
   const sortProjects = useCallback((projects: ProjectWithState[]) => {
     const active = projects.filter((p) => p.state.status === "active" || p.state.status === "activating");
     const dormant = projects.filter((p) => p.state.status === "dormant");
     return { active, dormant };
   }, []);
 
-  return { activate, deactivate, switchDesktop, updateState, sortProjects };
+  return { activate, deactivate, switchDesktop, updateState, addProject, sortProjects };
 }
