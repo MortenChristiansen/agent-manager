@@ -55,7 +55,7 @@ export type GlobalConfig = z.infer<typeof GlobalConfigSchema>;
 // --- Per-project runtime state ---
 
 export const ProjectStateSchema = z.object({
-  status: z.enum(["active", "dormant"]).default("dormant"),
+  status: z.enum(["active", "activating", "dormant"]).default("dormant"),
   lastActivated: z.string().nullable().default(null),
   lastDeactivated: z.string().nullable().default(null),
   desktopName: z.string().nullable().default(null),

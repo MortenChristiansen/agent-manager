@@ -43,6 +43,13 @@ export async function handleApiRequest(
       return Response.json({ error: "Project not found" }, { status: 404 });
     }
 
+    // Broadcast activating state immediately so UI shows loading
+    const earlyState = loadProjectState(name);
+    earlyState.status = "activating";
+    earlyState.desktopName = name;
+    saveProjectState(name, earlyState);
+    broadcast({ type: "projects", data: buildProjectsWithState(config) });
+
     createDesktop(name);
     switchToDesktop(name);
     // brief pause so Windows settles on the new desktop before spawning the terminal

@@ -16,7 +16,7 @@ export default function App() {
 
   // Find project matching the current desktop
   const currentProject = projects.find(
-    (p) => p.state.status === "active" && p.state.desktopName === currentDesktop
+    (p) => (p.state.status === "active" || p.state.status === "activating") && p.state.desktopName === currentDesktop
   );
 
   const handleActivate = async (name: string) => {
@@ -105,15 +105,17 @@ export default function App() {
         </div>
       </div>
 
-      {/* Recent Prompts — own scroll area */}
-      <section className="flex-1 min-h-0 flex flex-col border-t border-gray-800">
-        <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 pt-3 pb-2 shrink-0">
-          Recent Prompts
-        </h2>
-        <div className="flex-1 overflow-y-auto px-3 pb-3">
-          <PromptFeed prompts={prompts} currentProject={currentProject?.name} />
-        </div>
-      </section>
+      {/* Recent Prompts — only shown when viewing a project */}
+      {currentProject && (
+        <section className="flex-1 min-h-0 flex flex-col border-t border-gray-800">
+          <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 pt-3 pb-2 shrink-0">
+            Recent Prompts
+          </h2>
+          <div className="flex-1 overflow-y-auto px-3 pb-3">
+            <PromptFeed prompts={prompts} currentProject={currentProject.name} />
+          </div>
+        </section>
+      )}
 
       {/* Deactivation modal */}
       {deactivating && (

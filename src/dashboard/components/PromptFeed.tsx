@@ -21,14 +21,11 @@ export function PromptFeed({ prompts, currentProject }: Props) {
   return (
     <div className="space-y-2">
       {filtered.slice(0, 20).map((entry, i) => (
-        <div key={`${entry.timestamp}-${i}`} className="text-xs">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-gray-600 font-mono">
-              {formatTime(entry.timestamp)}
-            </span>
-            <span className="text-gray-400 font-medium">{entry.project}</span>
-          </div>
-          <p className="text-gray-500 truncate pl-4">"{entry.text}"</p>
+        <div key={`${entry.timestamp}-${i}`} className="text-xs flex items-baseline gap-2">
+          <span className="text-gray-600 font-mono shrink-0">
+            {formatTime(entry.timestamp)}
+          </span>
+          <p className="text-gray-500 truncate">"{entry.text}"</p>
         </div>
       ))}
     </div>

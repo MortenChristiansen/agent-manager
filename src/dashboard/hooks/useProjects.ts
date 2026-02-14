@@ -41,7 +41,7 @@ export function useProjects() {
   );
 
   const sortProjects = useCallback((projects: ProjectWithState[]) => {
-    const active = projects.filter((p) => p.state.status === "active");
+    const active = projects.filter((p) => p.state.status === "active" || p.state.status === "activating");
     const dormant = projects.filter((p) => p.state.status === "dormant");
     return { active, dormant };
   }, []);

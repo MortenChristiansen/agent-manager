@@ -12,6 +12,7 @@ interface Props {
 export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch }: Props) {
   const { name, config, state, tabs } = project;
   const isActive = state.status === "active";
+  const isActivating = state.status === "activating";
 
   const handleCardClick = () => {
     if (isActive && !isCurrent && onSwitch) {
@@ -23,11 +24,13 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
     <div
       onClick={handleCardClick}
       className={`group relative rounded-lg border bg-gray-900/50 p-3 transition-colors ${
-        isActive && isCurrent
-          ? "border-opacity-80"
-          : isActive && onSwitch
-            ? "border-gray-800 hover:border-gray-600 cursor-pointer"
-            : "border-gray-800 hover:border-gray-700"
+        isActivating
+          ? "border-gray-700"
+          : isActive && isCurrent
+            ? "border-opacity-80"
+            : isActive && onSwitch
+              ? "border-gray-800 hover:border-gray-600 cursor-pointer"
+              : "border-gray-800 hover:border-gray-700"
       }`}
       style={
         isActive && isCurrent
@@ -64,7 +67,12 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
                 {state.gitStatusSummary}
               </span>
             )}
-            {isActive ? (
+            {isActivating ? (
+              <svg className="w-4 h-4 animate-spin text-gray-400" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="8" cy="8" r="6" strokeOpacity="0.25" />
+                <path d="M8 2a6 6 0 0 1 6 6" strokeLinecap="round" />
+              </svg>
+            ) : isActive ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onDeactivate(name); }}
                 className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-red-400 transition-colors"
@@ -87,6 +95,13 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
             )}
           </div>
         </div>
+
+        {/* Activating indicator */}
+        {isActivating && (
+          <p className="text-xs text-gray-400 mb-1.5 animate-pulse">
+            Setting up environment…
+          </p>
+        )}
 
         {/* Tab status (active only) */}
         {isActive && config.terminal.tabs.length > 0 && (
