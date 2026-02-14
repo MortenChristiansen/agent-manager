@@ -4,6 +4,9 @@ import {
   loadProjectState,
   saveProjectState,
 } from "../state";
+import { broadcast } from "./websocket";
+import { createDesktop, removeDesktop, switchToDesktop } from "../desktop";
+import { launchTerminal, closeTerminal } from "../terminal";
 import type { ProjectState } from "../../shared/types";
 
 export async function handleApiRequest(
@@ -35,14 +38,31 @@ export async function handleApiRequest(
   if (path.match(/^\/api\/projects\/[^/]+\/activate$/) && req.method === "POST") {
     const name = path.split("/")[3];
     const config = loadConfig();
-    if (!config.projects[name]) {
+    const projectConfig = config.projects[name];
+    if (!projectConfig) {
       return Response.json({ error: "Project not found" }, { status: 404 });
     }
-    // Phase 1: just update state, Phase 2 will add desktop/terminal/editor launch
+
+    createDesktop(name);
+    switchToDesktop(name);
+    // brief pause so Windows settles on the new desktop before spawning the terminal
+    await new Promise((r) => setTimeout(r, 500));
+    const terminalPid = await launchTerminal({
+      projectName: name,
+      wslPath: projectConfig.path,
+      profile: projectConfig.terminal?.profile ?? config.defaults.terminal.profile,
+    });
+
     const state = loadProjectState(name);
     state.status = "active";
     state.lastActivated = new Date().toISOString();
+    state.desktopName = name;
+    if (terminalPid) state.windowHandles = { terminal: terminalPid };
     saveProjectState(name, state);
+
+    const projects = buildProjectsWithState(config);
+    broadcast({ type: "projects", data: projects });
+
     return Response.json({ ok: true, state });
   }
 
@@ -59,15 +79,40 @@ export async function handleApiRequest(
     };
 
     const state = loadProjectState(name);
+    if (state.windowHandles.terminal) {
+      closeTerminal(state.windowHandles.terminal);
+    }
+    switchToDesktop("Desktop 1");
+    removeDesktop(name);
+
     state.status = "dormant";
     state.lastDeactivated = new Date().toISOString();
-    state.desktopIndex = null;
+    state.desktopName = null;
     state.windowHandles = {};
     if (body.stateDescription !== undefined) {
       state.stateDescription = body.stateDescription;
     }
     saveProjectState(name, state);
+
+    const projects = buildProjectsWithState(config);
+    broadcast({ type: "projects", data: projects });
+
     return Response.json({ ok: true, state });
+  }
+
+  // POST /api/projects/:name/switch
+  if (path.match(/^\/api\/projects\/[^/]+\/switch$/) && req.method === "POST") {
+    const name = path.split("/")[3];
+    const config = loadConfig();
+    if (!config.projects[name]) {
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+    const state = loadProjectState(name);
+    if (!state.desktopName) {
+      return Response.json({ error: "Project has no desktop" }, { status: 400 });
+    }
+    switchToDesktop(state.desktopName);
+    return Response.json({ ok: true });
   }
 
   // PATCH /api/projects/:name/state - update state description etc
