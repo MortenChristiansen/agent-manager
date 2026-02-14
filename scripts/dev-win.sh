@@ -5,7 +5,7 @@ WIN_USER=$(powershell.exe -NoProfile -Command '[System.Environment]::UserName' |
 WIN_DIR="/mnt/c/Users/${WIN_USER}/.agent-manager-dev"
 WIN_PATH="C:\\Users\\${WIN_USER}\\.agent-manager-dev"
 
-mkdir -p "$WIN_DIR/out/main" "$WIN_DIR/out/preload"
+mkdir -p "$WIN_DIR/out/main" "$WIN_DIR/out/preload" "$WIN_DIR/resources"
 
 # Build electron main/preload
 echo "[dev-win] Building electron main/preload..."
@@ -14,6 +14,7 @@ bunx electron-vite build
 # Sync compiled artifacts
 rsync -a --delete out/main/ "$WIN_DIR/out/main/"
 rsync -a --delete out/preload/ "$WIN_DIR/out/preload/"
+rsync -a --delete resources/ "$WIN_DIR/resources/"
 cp package.json "$WIN_DIR/"
 
 # One-time: install electron on Windows side

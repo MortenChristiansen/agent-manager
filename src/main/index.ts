@@ -5,11 +5,15 @@ app.whenReady().then(() => {
   const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
   const [winW, winH] = [380, 900];
 
+  const iconFile = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
+  const iconPath = path.join(__dirname, '../../resources', iconFile);
+
   const win = new BrowserWindow({
     width: winW,
     height: winH,
     x: screenW - winW,
     y: Math.round((screenH - winH) / 2),
+    icon: iconPath,
     frame: false,
     alwaysOnTop: true,
     resizable: true,
