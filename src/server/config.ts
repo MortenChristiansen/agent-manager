@@ -2,6 +2,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import YAML from "yaml";
 import { GlobalConfigSchema, type GlobalConfig } from "../shared/types";
 import { AGENT_MANAGER_DIR, CONFIG_PATH, STATE_DIR } from "../shared/paths";
+import { agentProjectDir } from "../shared/paths";
 
 const DEFAULT_CONFIG = `version: 1
 controlProtocol: 1
@@ -24,6 +25,13 @@ projects: {}
 export function ensureDirs() {
   mkdirSync(AGENT_MANAGER_DIR, { recursive: true });
   mkdirSync(STATE_DIR, { recursive: true });
+}
+
+/** Ensure .agent-project/ dirs exist for all tracked projects */
+export function ensureAgentProjectDirs(config: GlobalConfig) {
+  for (const project of Object.values(config.projects)) {
+    mkdirSync(agentProjectDir(project.path), { recursive: true });
+  }
 }
 
 export function loadConfig(): GlobalConfig {

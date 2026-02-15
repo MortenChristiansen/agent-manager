@@ -54,6 +54,8 @@ export function saveProjectState(name: string, state: ProjectState) {
   writeFileSync(projectStatePath(name), YAML.stringify(persisted), "utf-8");
 }
 
+const STALE_MS = 60_000;
+
 export function loadTabStatus(projectPath: string): TabStatus[] {
   const statusPath = agentProjectStatusPath(projectPath);
   if (!existsSync(statusPath)) return [];
@@ -62,7 +64,12 @@ export function loadTabStatus(projectPath: string): TabStatus[] {
     const raw = readFileSync(statusPath, "utf-8");
     const parsed = JSON.parse(raw);
     const status = AgentProjectStatusSchema.parse(parsed);
-    return status.tabs;
+    const now = Date.now();
+    return status.tabs.filter((t) => {
+      if (t.state === "processing") return true;
+      const age = now - new Date(t.lastActivity).getTime();
+      return age < STALE_MS;
+    });
   } catch {
     return [];
   }

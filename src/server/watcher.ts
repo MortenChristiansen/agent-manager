@@ -23,23 +23,35 @@ export function watchAgentProjectStatus(
 
   if (!existsSync(dir)) return null;
 
-  try {
-    const w = watch(dir, (event, filename) => {
-      if (filename === "status.json") {
-        try {
-          const raw = readFileSync(statusPath, "utf-8");
-          const parsed = AgentProjectStatusSchema.parse(JSON.parse(raw));
-          onUpdate(projectName, parsed.tabs);
-        } catch {
-          // file may be mid-write
-        }
+  // Poll-based: fs.watch is unreliable on WSL2
+  const STALE_MS = 60_000; // 60s — idle entries older than this are dropped
+  let lastBroadcast = "";
+  const poll = setInterval(() => {
+    try {
+      const raw = readFileSync(statusPath, "utf-8");
+      const parsed = AgentProjectStatusSchema.parse(JSON.parse(raw));
+      const now = Date.now();
+      const liveTabs = parsed.tabs.filter((t) => {
+        if (t.state === "processing") return true;
+        const age = now - new Date(t.lastActivity).getTime();
+        return age < STALE_MS;
+      });
+      const key = JSON.stringify(liveTabs);
+      if (key !== lastBroadcast) {
+        lastBroadcast = key;
+        onUpdate(projectName, liveTabs);
       }
-    });
-    watchers.push(w);
-    return w;
-  } catch {
-    return null;
-  }
+    } catch {
+      // file may not exist yet or be mid-write
+    }
+  }, 2000);
+
+  // Return a fake FSWatcher-like object for cleanup
+  const pseudoWatcher = {
+    close: () => clearInterval(poll),
+  } as unknown as FSWatcher;
+  watchers.push(pseudoWatcher);
+  return pseudoWatcher;
 }
 
 export function loadRecentPrompts(

@@ -1,4 +1,4 @@
-import { loadConfig, ensureDirs } from "./config";
+import { loadConfig, ensureDirs, ensureAgentProjectDirs } from "./config";
 import { buildProjectsWithState, loadProjectState, saveProjectState } from "./state";
 import { getGitInfo } from "./git";
 import {
@@ -17,6 +17,9 @@ ensureDirs();
 
 const config = loadConfig();
 const port = config.dashboard.port;
+
+// Ensure .agent-project/ dirs exist so watchers + hooks work
+ensureAgentProjectDirs(config);
 
 // --- File watchers ---
 
