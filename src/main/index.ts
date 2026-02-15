@@ -1,6 +1,6 @@
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import path from 'path';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, execSync, ChildProcess } from 'child_process';
 import http from 'http';
 
 const isDev = !!process.env.VITE_DEV_SERVER_URL;
@@ -64,6 +64,7 @@ app.whenReady().then(async () => {
   const iconPath = path.join(__dirname, '../../resources', iconFile);
 
   const win = new BrowserWindow({
+    title: 'Agent Manager',
     width: winW,
     height: winH,
     x: screenW - winW,
@@ -80,6 +81,19 @@ app.whenReady().then(async () => {
   });
 
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+  // Pin to all virtual desktops via VirtualDesktop11 using native window handle
+  try {
+    const hwnd = win.getNativeWindowHandle().readUInt32LE(0);
+    const username = execSync('powershell.exe -NoProfile -Command [System.Environment]::UserName', {
+      encoding: 'utf-8', timeout: 5000,
+    }).trim();
+    const vd = `C:\\Users\\${username}\\.agent-manager\\tools\\VirtualDesktop11.exe`;
+    execSync(`"${vd}" /PinWindowHandle:${hwnd}`, { timeout: 5000 });
+    console.log(`[main] Pinned window (HWND ${hwnd}) to all desktops`);
+  } catch (e: any) {
+    console.warn('[main] VD11 pin failed:', e.message);
+  }
 
   const url = process.env.VITE_DEV_SERVER_URL || 'http://localhost:7890';
   win.loadURL(url);

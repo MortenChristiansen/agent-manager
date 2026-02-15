@@ -8,7 +8,7 @@ import {
 } from "./watcher";
 import { handleApiRequest } from "./api/routes";
 import { addClient, removeClient, broadcast } from "./api/websocket";
-import { getCurrentDesktopName, listDesktopNames, pinWindow } from "./desktop";
+import { getCurrentDesktopName, listDesktopNames } from "./desktop";
 import { registerProjectWatcher, projectPathToName } from "./projectRegistry";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
@@ -185,11 +185,6 @@ const server = Bun.serve({
 });
 
 console.log(`Agent Manager server running on http://localhost:${port}`);
-
-// Pin Electron window after short delay to ensure it's up
-setTimeout(() => {
-  pinWindow("Agent Manager");
-}, 2000);
 
 // Cleanup on exit
 process.on("SIGINT", () => {
