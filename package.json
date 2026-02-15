@@ -12,7 +12,8 @@
     "build:electron": "bunx electron-vite build",
     "start": "bun src/server/index.ts",
     "cli": "bun src/cli/index.ts",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "bash scripts/deploy.sh",
+    "setup:hooks": "bash scripts/setup-hooks.sh"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.0",

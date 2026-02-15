@@ -39,15 +39,37 @@ Everything runs in WSL. The dashboard is served on `localhost:7890` and opened a
 └─────────────────────────────────────────────┘
 ```
 
+## Prerequisites
+
+- **WSL 2** with Ubuntu (tested on 24.04)
+- **Bun** — `curl -fsSL https://bun.sh/install | bash`
+- **jq** — `sudo apt install jq` (used by status hook)
+- **Claude Code** — `npm install -g @anthropic-ai/claude-code`
+- **Windows Terminal** with a WSL profile (e.g. "Ubuntu")
+- **Node/npm on Windows** (for Electron install during deploy)
+- **VirtualDesktop11.exe** — [github.com/MScholtes/VirtualDesktop](https://github.com/MScholtes/VirtualDesktop), place in `C:\Users\<you>\.agent-manager\tools\` (optional, for desktop switching)
+
 ## Setup
 
 ```bash
+git clone <repo-url> ~/code/agent-manager
+cd ~/code/agent-manager
 bun install
 ```
 
+### Install Claude Code hooks
+
+Registers the status hook in `~/.claude/settings.json` so the dashboard can track which Claude instances are processing/idle:
+
+```bash
+bun run setup:hooks
+```
+
+This is idempotent — safe to re-run after pulling updates.
+
 ### Global config
 
-Create `~/.agent-manager/config.yaml`:
+First server start auto-creates `~/.agent-manager/config.yaml` with defaults. Edit to add projects:
 
 ```yaml
 version: 1
@@ -134,7 +156,7 @@ Each managed project gets a `.agent-project/` directory (gitignored) containing:
 - `status.json` — per-tab Claude Code state, written by hooks on prompt submit and response completion
 - `hooks/` — Claude Code hooks installed by agent-manager
 
-The agent-manager watches `status.json` across all active projects via `fs.watch` and pushes changes to the dashboard over WebSocket.
+The agent-manager polls `status.json` across all tracked projects (fs.watch unreliable on WSL2) and pushes changes to the dashboard over WebSocket. Stale idle entries (>60s) are automatically filtered out.
 
 Tab states:
 - **Processing** — hook reported prompt submitted, no completion yet
@@ -176,5 +198,15 @@ protocol/
 | Config | YAML + Zod validation |
 | AI | OpenRouter via AI SDK |
 | Windows integration | PowerShell from WSL |
-| Virtual desktops | PSVirtualDesktop module |
+| Virtual desktops | VirtualDesktop11.exe |
 | Terminal | Windows Terminal CLI (`wt.exe`) |
+
+## External state
+
+| Location | Purpose | Created by |
+|---|---|---|
+| `~/.agent-manager/config.yaml` | Project definitions, dashboard settings | Auto (first server start) |
+| `~/.agent-manager/state/` | Per-project runtime state | Auto |
+| `~/.claude/settings.json` | Claude Code hooks | `bun run setup:hooks` |
+| `<project>/.agent-project/` | Per-project Claude instance status | Auto (server start) |
+| `C:\Users\<you>\.agent-manager\` | Electron app, built assets | `bun run deploy` |
