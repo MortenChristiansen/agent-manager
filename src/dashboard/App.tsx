@@ -10,7 +10,7 @@ import type { ProjectWithState } from "../shared/types";
 
 export default function App() {
   const { projects, prompts, connected, currentDesktop } = useWebSocket();
-  const { activate, deactivate, switchDesktop, addProject, sortProjects } = useProjects();
+  const { activate, deactivate, switchDesktop, goHome, addProject, sortProjects } = useProjects();
   const [deactivating, setDeactivating] = useState<ProjectWithState | null>(null);
   const [showAddProject, setShowAddProject] = useState(false);
 
@@ -60,6 +60,15 @@ export default function App() {
             title={connected ? "Connected" : "Disconnected"}
           />
           <button
+            onClick={goHome}
+            disabled={!currentProject}
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+            className="w-5 h-5 flex items-center justify-center rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            title="Go to primary desktop"
+          >
+            &#8962;
+          </button>
+          <button
             onClick={() => setShowAddProject(true)}
             style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
             className="w-5 h-5 flex items-center justify-center rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs transition-colors"
@@ -72,7 +81,7 @@ export default function App() {
       </header>
 
       {/* Projects */}
-      <div className="overflow-y-auto shrink-0 max-h-[50%]">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-3 space-y-4">
           {active.length > 0 && (
             <section>
@@ -126,7 +135,7 @@ export default function App() {
 
       {/* Recent Prompts — only shown when viewing a project */}
       {currentProject && (
-        <section className="flex-1 min-h-0 flex flex-col border-t border-gray-800">
+        <section className="max-h-[25%] min-h-0 flex flex-col border-t border-gray-800">
           <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 pt-3 pb-2 shrink-0">
             Recent Prompts
           </h2>

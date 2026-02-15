@@ -28,6 +28,11 @@ export function useProjects() {
     return res.json();
   }, []);
 
+  const goHome = useCallback(async () => {
+    const res = await fetch("/api/desktop/home", { method: "POST" });
+    return res.json();
+  }, []);
+
   const updateState = useCallback(
     async (name: string, updates: Record<string, any>) => {
       const res = await fetch(`/api/projects/${name}/state`, {
@@ -58,5 +63,5 @@ export function useProjects() {
     return { active, dormant };
   }, []);
 
-  return { activate, deactivate, switchDesktop, updateState, addProject, sortProjects };
+  return { activate, deactivate, switchDesktop, goHome, updateState, addProject, sortProjects };
 }

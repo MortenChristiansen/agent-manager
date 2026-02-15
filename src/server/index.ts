@@ -40,8 +40,6 @@ async function pollGit() {
   const config = loadConfig();
   for (const [name, project] of Object.entries(config.projects)) {
     const state = loadProjectState(name);
-    if (state.status !== "active") continue;
-
     const git = getGitInfo(project.path);
     const changed =
       git.branch !== state.gitBranch ||

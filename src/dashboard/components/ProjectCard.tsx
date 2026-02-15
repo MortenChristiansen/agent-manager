@@ -65,7 +65,7 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
             )}
           </div>
           <div className="flex items-center gap-1">
-            {isActive && state.gitStatusSummary && (
+            {state.gitStatusSummary && (
               <span
                 className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
                   state.gitStatusSummary === "clean"

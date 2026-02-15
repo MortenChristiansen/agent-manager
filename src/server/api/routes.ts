@@ -182,6 +182,12 @@ export async function handleApiRequest(
     return Response.json({ ok: true, state });
   }
 
+  // POST /api/desktop/home - switch to desktop 0
+  if (path === "/api/desktop/home" && req.method === "POST") {
+    switchToDesktop("0");
+    return Response.json({ ok: true });
+  }
+
   // GET /api/config
   if (path === "/api/config" && req.method === "GET") {
     const config = loadConfig();

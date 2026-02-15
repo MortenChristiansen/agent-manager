@@ -24,7 +24,7 @@ export function watchAgentProjectStatus(
   if (!existsSync(dir)) return null;
 
   // Poll-based: fs.watch is unreliable on WSL2
-  const STALE_MS = 60_000; // 60s — idle entries older than this are dropped
+  const STALE_MS = 30 * 60_000; // 30min — idle entries older than this are dropped
   let lastBroadcast = "";
   const poll = setInterval(() => {
     try {

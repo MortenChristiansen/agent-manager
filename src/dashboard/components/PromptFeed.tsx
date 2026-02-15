@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { PromptEntry } from "../../shared/types";
 
 interface Props {
@@ -24,9 +24,16 @@ function PromptTooltip({ text, anchor }: { text: string; anchor: DOMRect | null 
 
 export function PromptFeed({ prompts, currentProject }: Props) {
   const [tooltip, setTooltip] = useState<{ text: string; rect: DOMRect } | null>(null);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => () => { if (hoverTimer.current) clearTimeout(hoverTimer.current); }, []);
+
+  const copyPrompt = useCallback((text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 1500);
+  }, []);
 
   const filtered = currentProject
     ? prompts.filter((p) => p.project === currentProject)
@@ -52,22 +59,31 @@ export function PromptFeed({ prompts, currentProject }: Props) {
   };
 
   return (
-    <div className="space-y-2">
-      {filtered.slice(0, 20).map((entry, i) => (
-        <div
-          key={`${entry.timestamp}-${i}`}
-          className="text-xs flex items-baseline gap-2 cursor-default"
-          onMouseEnter={(e) => showTooltip(e, entry.text)}
-          onMouseLeave={hideTooltip}
-        >
-          <span className="text-gray-600 font-mono shrink-0">
-            {formatTime(entry.timestamp)}
-          </span>
-          <p className="text-gray-500 truncate">"{entry.text}"</p>
-        </div>
-      ))}
+    <>
+      <div className="space-y-2">
+        {filtered.slice(0, 20).map((entry, i) => (
+          <div
+            key={`${entry.timestamp}-${i}`}
+            className="text-xs flex items-center gap-2 cursor-default group"
+            onMouseEnter={(e) => showTooltip(e, entry.text)}
+            onMouseLeave={hideTooltip}
+          >
+            <span className="text-gray-600 font-mono shrink-0">
+              {formatTime(entry.timestamp)}
+            </span>
+            <p className="text-gray-500 truncate flex-1 min-w-0">"{entry.text}"</p>
+            <button
+              onClick={(e) => { e.stopPropagation(); copyPrompt(entry.text, i); }}
+              className="shrink-0 opacity-0 group-hover:opacity-100 text-gray-600 hover:text-gray-300 transition-opacity"
+              title="Copy prompt"
+            >
+              {copiedIdx === i ? "✓" : "⎘"}
+            </button>
+          </div>
+        ))}
+      </div>
       <PromptTooltip text={tooltip?.text ?? ""} anchor={tooltip?.rect ?? null} />
-    </div>
+    </>
   );
 }
 

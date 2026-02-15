@@ -54,7 +54,7 @@ export function saveProjectState(name: string, state: ProjectState) {
   writeFileSync(projectStatePath(name), YAML.stringify(persisted), "utf-8");
 }
 
-const STALE_MS = 60_000;
+const STALE_MS = 30 * 60_000;
 
 export function loadTabStatus(projectPath: string): TabStatus[] {
   const statusPath = agentProjectStatusPath(projectPath);
