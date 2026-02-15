@@ -15,6 +15,14 @@ import { launchTerminal } from "../terminal";
 import { registerProjectWatcher } from "../projectRegistry";
 import type { ProjectState } from "../../shared/types";
 
+function normalizeTerminal(t?: { profile?: string; tabs?: { name: string; command?: string }[] }) {
+  if (!t) return { tabs: [] as { name: string; command: string }[] };
+  return {
+    profile: t.profile,
+    tabs: (t.tabs ?? []).map((tab) => ({ name: tab.name, command: tab.command ?? "" })),
+  };
+}
+
 export async function handleApiRequest(
   req: Request,
   url: URL
@@ -35,6 +43,7 @@ export async function handleApiRequest(
       path?: string;
       description?: string;
       color?: string;
+      terminal?: { profile?: string; tabs?: { name: string; command?: string }[] };
     };
 
     if (!body.path) {
@@ -64,7 +73,7 @@ export async function handleApiRequest(
       path: projectPath,
       description: body.description ?? "",
       color: body.color ?? "#6366f1",
-      terminal: { tabs: [] },
+      terminal: normalizeTerminal(body.terminal),
     };
     saveConfig(config);
 
@@ -74,6 +83,54 @@ export async function handleApiRequest(
     broadcast({ type: "projects", data: projects });
 
     return Response.json({ ok: true, name });
+  }
+
+  // PUT /api/projects/:name - update project config
+  if (path.match(/^\/api\/projects\/[^/]+$/) && req.method === "PUT") {
+    const name = decodeURIComponent(path.split("/")[3]);
+    const config = loadConfig();
+    if (!config.projects[name]) {
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    const body = (await req.json().catch(() => ({}))) as {
+      description?: string;
+      color?: string;
+      terminal?: { profile?: string; tabs?: { name: string; command?: string }[] };
+      controlProtocol?: number;
+    };
+
+    const p = config.projects[name];
+    if (body.description !== undefined) p.description = body.description;
+    if (body.color !== undefined) p.color = body.color;
+    if (body.terminal !== undefined) p.terminal = normalizeTerminal(body.terminal);
+    if (body.controlProtocol !== undefined) p.controlProtocol = body.controlProtocol;
+
+    saveConfig(config);
+    const projects = buildProjectsWithState(config);
+    broadcast({ type: "projects", data: projects });
+    return Response.json({ ok: true });
+  }
+
+  // DELETE /api/projects/:name - remove project
+  if (path.match(/^\/api\/projects\/[^/]+$/) && req.method === "DELETE") {
+    const name = decodeURIComponent(path.split("/")[3]);
+    const config = loadConfig();
+    if (!config.projects[name]) {
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    const state = loadProjectState(name);
+    if (state.status === "active" || state.status === "activating") {
+      return Response.json({ error: "Cannot delete an active project" }, { status: 400 });
+    }
+
+    delete config.projects[name];
+    saveConfig(config);
+
+    const projects = buildProjectsWithState(config);
+    broadcast({ type: "projects", data: projects });
+    return Response.json({ ok: true });
   }
 
   // GET /api/projects/:name - single project

@@ -5,15 +5,17 @@ import { ProjectCard } from "./components/ProjectCard";
 import { PromptFeed } from "./components/PromptFeed";
 import { TaskList } from "./components/TaskList";
 import { DeactivationModal } from "./components/DeactivationModal";
-import { AddProjectModal } from "./components/AddProjectModal";
+import { ProjectFormModal } from "./components/ProjectFormModal";
+import type { ProjectFormData } from "./components/ProjectFormModal";
 import { WindowControls } from "./components/WindowControls";
 import type { ProjectWithState } from "../shared/types";
 
 export default function App() {
   const { projects, prompts, connected, currentDesktop, tasks } = useWebSocket();
-  const { activate, deactivate, switchDesktop, goHome, addProject, sortProjects } = useProjects();
+  const { activate, deactivate, switchDesktop, goHome, addProject, updateProject, deleteProject, sortProjects } = useProjects();
   const [deactivating, setDeactivating] = useState<ProjectWithState | null>(null);
   const [showAddProject, setShowAddProject] = useState(false);
+  const [editing, setEditing] = useState<ProjectWithState | null>(null);
   const [bottomTab, setBottomTab] = useState<"prompts" | "tasks">("prompts");
 
   const { active, dormant } = sortProjects(projects);
@@ -42,13 +44,48 @@ export default function App() {
     await switchDesktop(name);
   };
 
-  const handleAddProject = async (data: { name: string; path: string; color: string; description: string }) => {
-    const res = await addProject(data);
+  const handleAddProject = async (data: ProjectFormData) => {
+    const res = await addProject({
+      name: data.name,
+      path: data.path,
+      color: data.color,
+      description: data.description,
+      terminal: data.terminal,
+    });
     if (res.error) {
       alert(res.error);
       return;
     }
     setShowAddProject(false);
+  };
+
+  const handleEditProject = async (data: ProjectFormData) => {
+    const res = await updateProject(data.name, {
+      color: data.color,
+      description: data.description,
+      terminal: data.terminal,
+      controlProtocol: data.controlProtocol,
+    });
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    setEditing(null);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!editing) return;
+    const res = await deleteProject(editing.name);
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    setEditing(null);
+  };
+
+  const handleEdit = (name: string) => {
+    const project = projects.find((p) => p.name === name);
+    if (project) setEditing(project);
   };
 
   return (
@@ -99,6 +136,7 @@ export default function App() {
                     onActivate={handleActivate}
                     onDeactivate={handleDeactivateClick}
                     onSwitch={handleSwitch}
+                    onEdit={handleEdit}
                   />
                 ))}
               </div>
@@ -117,6 +155,7 @@ export default function App() {
                     project={p}
                     onActivate={handleActivate}
                     onDeactivate={handleDeactivateClick}
+                    onEdit={handleEdit}
                   />
                 ))}
               </div>
@@ -180,9 +219,21 @@ export default function App() {
 
       {/* Add project modal */}
       {showAddProject && (
-        <AddProjectModal
+        <ProjectFormModal
+          mode="add"
           onSubmit={handleAddProject}
           onCancel={() => setShowAddProject(false)}
+        />
+      )}
+
+      {/* Edit project modal */}
+      {editing && (
+        <ProjectFormModal
+          mode="edit"
+          project={editing}
+          onSubmit={handleEditProject}
+          onDelete={handleDeleteProject}
+          onCancel={() => setEditing(null)}
         />
       )}
     </div>

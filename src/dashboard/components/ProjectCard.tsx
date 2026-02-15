@@ -7,9 +7,10 @@ interface Props {
   onActivate: (name: string) => void;
   onDeactivate: (name: string) => void;
   onSwitch?: (name: string) => void;
+  onEdit?: (name: string) => void;
 }
 
-export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch }: Props) {
+export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch, onEdit }: Props) {
   const { name, config, state, tabs } = project;
   const isActive = state.status === "active";
   const isActivating = state.status === "activating";
@@ -65,6 +66,17 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
             )}
           </div>
           <div className="flex items-center gap-1">
+            {onEdit && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(name); }}
+                className="p-1 rounded hover:bg-gray-800 text-gray-600 hover:text-gray-300 transition-colors opacity-0 group-hover:opacity-100"
+                title="Edit project"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z" />
+                </svg>
+              </button>
+            )}
             {state.gitStatusSummary && (
               <span
                 className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${

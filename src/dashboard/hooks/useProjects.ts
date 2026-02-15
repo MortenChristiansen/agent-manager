@@ -46,7 +46,13 @@ export function useProjects() {
   );
 
   const addProject = useCallback(
-    async (data: { name: string; path: string; color?: string; description?: string }) => {
+    async (data: {
+      name: string;
+      path: string;
+      color?: string;
+      description?: string;
+      terminal?: { profile?: string; tabs?: { name: string; command?: string }[] };
+    }) => {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,11 +63,38 @@ export function useProjects() {
     []
   );
 
+  const updateProject = useCallback(
+    async (
+      name: string,
+      data: {
+        description?: string;
+        color?: string;
+        terminal?: { profile?: string; tabs?: { name: string; command?: string }[] };
+        controlProtocol?: number;
+      }
+    ) => {
+      const res = await fetch(`/api/projects/${encodeURIComponent(name)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      return res.json();
+    },
+    []
+  );
+
+  const deleteProject = useCallback(async (name: string) => {
+    const res = await fetch(`/api/projects/${encodeURIComponent(name)}`, {
+      method: "DELETE",
+    });
+    return res.json();
+  }, []);
+
   const sortProjects = useCallback((projects: ProjectWithState[]) => {
     const active = projects.filter((p) => p.state.status === "active" || p.state.status === "activating");
     const dormant = projects.filter((p) => p.state.status === "dormant");
     return { active, dormant };
   }, []);
 
-  return { activate, deactivate, switchDesktop, goHome, updateState, addProject, sortProjects };
+  return { activate, deactivate, switchDesktop, goHome, updateState, addProject, updateProject, deleteProject, sortProjects };
 }
