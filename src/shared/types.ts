@@ -38,6 +38,7 @@ export const GlobalConfigSchema = z.object({
       terminal: z
         .object({
           profile: z.string().default("Ubuntu"),
+          shell: z.enum(["zsh", "bash"]).default("zsh"),
         })
         .default({}),
       editor: z.string().default("code"),

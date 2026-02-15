@@ -110,6 +110,8 @@ export async function handleApiRequest(
       projectName: name,
       wslPath: projectConfig.path,
       profile: projectConfig.terminal?.profile ?? config.defaults.terminal.profile,
+      shell: config.defaults.terminal.shell,
+      tabs: projectConfig.terminal?.tabs,
     });
 
     setProjectStatus(name, "active");

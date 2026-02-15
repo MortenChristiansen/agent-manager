@@ -87,6 +87,7 @@ dashboard:
 defaults:
   terminal:
     profile: "Ubuntu"
+    shell: zsh             # zsh | bash — must match where your tools (bun, nvm, etc.) are configured
   editor: code
 
 projects:
@@ -99,7 +100,7 @@ projects:
         - name: dev
           command: "bun run dev"
         - name: claude
-          command: ""       # empty = plain shell
+          command: ""       # empty = claude --dangerously-skip-permissions
     controlProtocol: 3
 ```
 
