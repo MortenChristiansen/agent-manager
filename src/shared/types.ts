@@ -105,7 +105,8 @@ export type WSMessage =
   | { type: "prompt"; data: PromptEntry }
   | { type: "prompts"; data: PromptEntry[] }
   | { type: "tabStatus"; project: string; data: TabStatus[] }
-  | { type: "currentDesktop"; data: string };
+  | { type: "currentDesktop"; data: string }
+  | { type: "tasks"; project: string; data: string[] };
 
 export interface ProjectWithState {
   name: string;

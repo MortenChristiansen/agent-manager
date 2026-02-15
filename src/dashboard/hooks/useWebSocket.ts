@@ -6,6 +6,7 @@ interface UseWebSocketReturn {
   prompts: PromptEntry[];
   connected: boolean;
   currentDesktop: string;
+  tasks: Map<string, string[]>;
 }
 
 export function useWebSocket(): UseWebSocketReturn {
@@ -13,6 +14,7 @@ export function useWebSocket(): UseWebSocketReturn {
   const [prompts, setPrompts] = useState<PromptEntry[]>([]);
   const [connected, setConnected] = useState(false);
   const [currentDesktop, setCurrentDesktop] = useState("");
+  const [tasks, setTasks] = useState<Map<string, string[]>>(new Map());
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -62,6 +64,14 @@ export function useWebSocket(): UseWebSocketReturn {
             case "currentDesktop":
               setCurrentDesktop(msg.data);
               break;
+
+            case "tasks":
+              setTasks((prev) => {
+                const next = new Map(prev);
+                next.set(msg.project, msg.data);
+                return next;
+              });
+              break;
           }
         } catch {
           // ignore parse errors
@@ -87,5 +97,5 @@ export function useWebSocket(): UseWebSocketReturn {
     };
   }, []);
 
-  return { projects, prompts, connected, currentDesktop };
+  return { projects, prompts, connected, currentDesktop, tasks };
 }

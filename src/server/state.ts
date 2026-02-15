@@ -8,7 +8,7 @@ import {
   type TabStatus,
   AgentProjectStatusSchema,
 } from "../shared/types";
-import { projectStatePath, agentProjectStatusPath } from "../shared/paths";
+import { projectStatePath, agentProjectStatusPath, agentProjectTasksPath } from "../shared/paths";
 import { ensureDirs } from "./config";
 
 const DEFAULT_STATE: ProjectState = {
@@ -73,6 +73,22 @@ export function loadTabStatus(projectPath: string): TabStatus[] {
   } catch {
     return [];
   }
+}
+
+export function loadTasks(projectPath: string): string[] {
+  const tasksPath = agentProjectTasksPath(projectPath);
+  if (!existsSync(tasksPath)) return [];
+  try {
+    const raw = readFileSync(tasksPath, "utf-8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveTasks(projectPath: string, tasks: string[]) {
+  writeFileSync(agentProjectTasksPath(projectPath), JSON.stringify(tasks, null, 2), "utf-8");
 }
 
 export function buildProjectsWithState(

@@ -6,6 +6,8 @@ import {
   loadProjectState,
   saveProjectState,
   setProjectStatus,
+  loadTasks,
+  saveTasks,
 } from "../state";
 import { broadcast } from "./websocket";
 import { closeWindowsOnDesktop, createDesktop, removeDesktop, switchToDesktop } from "../desktop";
@@ -197,6 +199,73 @@ export async function handleApiRequest(
       dashboard: config.dashboard,
       controlProtocol: config.controlProtocol,
     });
+  }
+
+  // GET /api/projects/:name/tasks
+  if (path.match(/^\/api\/projects\/[^/]+\/tasks$/) && req.method === "GET") {
+    const name = path.split("/")[3];
+    const config = loadConfig();
+    const projectConfig = config.projects[name];
+    if (!projectConfig) {
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+    return Response.json(loadTasks(projectConfig.path));
+  }
+
+  // POST /api/projects/:name/tasks - add task
+  if (path.match(/^\/api\/projects\/[^/]+\/tasks$/) && req.method === "POST") {
+    const name = path.split("/")[3];
+    const config = loadConfig();
+    const projectConfig = config.projects[name];
+    if (!projectConfig) {
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+    const body = (await req.json().catch(() => ({}))) as { task?: string };
+    if (!body.task?.trim()) {
+      return Response.json({ error: "task is required" }, { status: 400 });
+    }
+    const tasks = loadTasks(projectConfig.path);
+    tasks.push(body.task.trim());
+    saveTasks(projectConfig.path, tasks);
+    broadcast({ type: "tasks", project: name, data: tasks });
+    return Response.json({ ok: true, tasks });
+  }
+
+  // DELETE /api/projects/:name/tasks/:index
+  if (path.match(/^\/api\/projects\/[^/]+\/tasks\/\d+$/) && req.method === "DELETE") {
+    const parts = path.split("/");
+    const name = parts[3];
+    const index = parseInt(parts[5], 10);
+    const config = loadConfig();
+    const projectConfig = config.projects[name];
+    if (!projectConfig) {
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+    const tasks = loadTasks(projectConfig.path);
+    if (index < 0 || index >= tasks.length) {
+      return Response.json({ error: "Invalid index" }, { status: 400 });
+    }
+    tasks.splice(index, 1);
+    saveTasks(projectConfig.path, tasks);
+    broadcast({ type: "tasks", project: name, data: tasks });
+    return Response.json({ ok: true, tasks });
+  }
+
+  // PUT /api/projects/:name/tasks - reorder/replace tasks
+  if (path.match(/^\/api\/projects\/[^/]+\/tasks$/) && req.method === "PUT") {
+    const name = path.split("/")[3];
+    const config = loadConfig();
+    const projectConfig = config.projects[name];
+    if (!projectConfig) {
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+    const body = (await req.json().catch(() => ({}))) as { tasks?: string[] };
+    if (!Array.isArray(body.tasks)) {
+      return Response.json({ error: "tasks array required" }, { status: 400 });
+    }
+    saveTasks(projectConfig.path, body.tasks);
+    broadcast({ type: "tasks", project: name, data: body.tasks });
+    return Response.json({ ok: true, tasks: body.tasks });
   }
 
   return Response.json({ error: "Not found" }, { status: 404 });

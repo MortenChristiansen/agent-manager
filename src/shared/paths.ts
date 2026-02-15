@@ -21,6 +21,10 @@ export function agentProjectStatusPath(projectPath: string): string {
   return join(agentProjectDir(projectPath), "status.json");
 }
 
+export function agentProjectTasksPath(projectPath: string): string {
+  return join(agentProjectDir(projectPath), "tasks.json");
+}
+
 const WSL_DISTRO = process.env.WSL_DISTRO_NAME ?? "Ubuntu-24.04";
 
 /** Convert WSL path to Windows UNC path */

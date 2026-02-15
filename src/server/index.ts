@@ -1,5 +1,5 @@
 import { loadConfig, ensureDirs, ensureAgentProjectDirs } from "./config";
-import { buildProjectsWithState, loadProjectState, saveProjectState, setProjectStatus } from "./state";
+import { buildProjectsWithState, loadProjectState, saveProjectState, setProjectStatus, loadTasks } from "./state";
 import { getGitInfo } from "./git";
 import {
   watchPromptHistory,
@@ -164,6 +164,12 @@ const server = Bun.serve({
       // Send recent prompt history
       const recentPrompts = loadRecentPrompts(50, projectPathToName);
       ws.send(JSON.stringify({ type: "prompts", data: recentPrompts }));
+      // Send tasks for each project
+      const cfg = loadConfig();
+      for (const [name, project] of Object.entries(cfg.projects)) {
+        const tasks = loadTasks(project.path);
+        ws.send(JSON.stringify({ type: "tasks", project: name, data: tasks }));
+      }
       // Send current desktop
       if (lastDesktopName) {
         ws.send(JSON.stringify({ type: "currentDesktop", data: lastDesktopName }));

@@ -3,16 +3,18 @@ import { useWebSocket } from "./hooks/useWebSocket";
 import { useProjects } from "./hooks/useProjects";
 import { ProjectCard } from "./components/ProjectCard";
 import { PromptFeed } from "./components/PromptFeed";
+import { TaskList } from "./components/TaskList";
 import { DeactivationModal } from "./components/DeactivationModal";
 import { AddProjectModal } from "./components/AddProjectModal";
 import { WindowControls } from "./components/WindowControls";
 import type { ProjectWithState } from "../shared/types";
 
 export default function App() {
-  const { projects, prompts, connected, currentDesktop } = useWebSocket();
+  const { projects, prompts, connected, currentDesktop, tasks } = useWebSocket();
   const { activate, deactivate, switchDesktop, goHome, addProject, sortProjects } = useProjects();
   const [deactivating, setDeactivating] = useState<ProjectWithState | null>(null);
   const [showAddProject, setShowAddProject] = useState(false);
+  const [bottomTab, setBottomTab] = useState<"prompts" | "tasks">("prompts");
 
   const { active, dormant } = sortProjects(projects);
 
@@ -133,14 +135,36 @@ export default function App() {
         </div>
       </div>
 
-      {/* Recent Prompts — only shown when viewing a project */}
+      {/* Bottom panel — only shown when viewing a project */}
       {currentProject && (
         <section className="max-h-[25%] min-h-0 flex flex-col border-t border-gray-800">
-          <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 pt-3 pb-2 shrink-0">
-            Recent Prompts
-          </h2>
+          <div className="flex gap-3 px-3 pt-2 pb-1 shrink-0">
+            <button
+              onClick={() => setBottomTab("prompts")}
+              className={`text-[10px] font-semibold uppercase tracking-widest transition-colors ${
+                bottomTab === "prompts" ? "text-gray-300" : "text-gray-600 hover:text-gray-400"
+              }`}
+            >
+              Prompts
+            </button>
+            <button
+              onClick={() => setBottomTab("tasks")}
+              className={`text-[10px] font-semibold uppercase tracking-widest transition-colors ${
+                bottomTab === "tasks" ? "text-gray-300" : "text-gray-600 hover:text-gray-400"
+              }`}
+            >
+              Tasks
+            </button>
+          </div>
           <div className="flex-1 overflow-y-auto px-3 pb-3">
-            <PromptFeed prompts={prompts} currentProject={currentProject.name} />
+            {bottomTab === "prompts" ? (
+              <PromptFeed prompts={prompts} currentProject={currentProject.name} />
+            ) : (
+              <TaskList
+                tasks={tasks.get(currentProject.name) ?? []}
+                projectName={currentProject.name}
+              />
+            )}
           </div>
         </section>
       )}
