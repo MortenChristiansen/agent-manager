@@ -76,6 +76,27 @@ export function getCurrentDesktopName(): string {
   return match ? match[1] : output;
 }
 
+/** List all virtual desktop names */
+export function listDesktopNames(): string[] {
+  const output = run("/List");
+  if (!output) return [];
+  // Output format:
+  //   Virtual desktops:
+  //   -----------------
+  //   MyProject (visible) (Wallpaper: ...)
+  //   OtherProject (Wallpaper: ...)
+  //   Count of desktops: N
+  const names: string[] = [];
+  for (const line of output.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("Virtual desktop") || trimmed.startsWith("---") || trimmed.startsWith("Count of")) continue;
+    // Name is everything before the first parenthetical
+    const match = trimmed.match(/^(.+?)\s*\(/);
+    if (match) names.push(match[1]);
+  }
+  return names;
+}
+
 /** Close all non-pinned windows on a virtual desktop */
 export function closeWindowsOnDesktop(desktopName: string): void {
   const output = run(`/ListWindowsOnDesktop:${desktopName}`);

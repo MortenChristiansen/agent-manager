@@ -1,5 +1,5 @@
 import { loadConfig, ensureDirs, ensureAgentProjectDirs } from "./config";
-import { buildProjectsWithState, loadProjectState, saveProjectState } from "./state";
+import { buildProjectsWithState, loadProjectState, saveProjectState, setProjectStatus } from "./state";
 import { getGitInfo } from "./git";
 import {
   watchPromptHistory,
@@ -8,7 +8,7 @@ import {
 } from "./watcher";
 import { handleApiRequest } from "./api/routes";
 import { addClient, removeClient, broadcast } from "./api/websocket";
-import { getCurrentDesktopName, pinWindow } from "./desktop";
+import { getCurrentDesktopName, listDesktopNames, pinWindow } from "./desktop";
 import { registerProjectWatcher, projectPathToName } from "./projectRegistry";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
@@ -20,6 +20,22 @@ const port = config.dashboard.port;
 
 // Ensure .agent-project/ dirs exist so watchers + hooks work
 ensureAgentProjectDirs(config);
+
+// --- Detect already-active projects from existing virtual desktops ---
+
+const existingDesktops = new Set(listDesktopNames());
+for (const name of Object.keys(config.projects)) {
+  if (existingDesktops.has(name)) {
+    setProjectStatus(name, "active");
+    // Ensure persisted state has desktopName set
+    const state = loadProjectState(name);
+    if (!state.desktopName) {
+      state.desktopName = name;
+      saveProjectState(name, state);
+    }
+    console.log(`Restored active state for project: ${name}`);
+  }
+}
 
 // --- File watchers ---
 
