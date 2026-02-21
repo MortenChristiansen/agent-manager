@@ -240,6 +240,8 @@ export async function handleApiRequest(
     const state = loadProjectState(name);
     Object.assign(state, body);
     saveProjectState(name, state);
+    const config = loadConfig();
+    broadcast({ type: "projects", data: buildProjectsWithState(config) });
     return Response.json({ ok: true, state });
   }
 

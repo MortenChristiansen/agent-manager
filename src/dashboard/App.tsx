@@ -12,7 +12,7 @@ import type { ProjectWithState } from "../shared/types";
 
 export default function App() {
   const { projects, prompts, connected, currentDesktop, tasks } = useWebSocket();
-  const { activate, deactivate, switchDesktop, goHome, addProject, updateProject, deleteProject, sortProjects } = useProjects();
+  const { activate, deactivate, switchDesktop, goHome, updateState, addProject, updateProject, deleteProject, sortProjects } = useProjects();
   const [deactivating, setDeactivating] = useState<ProjectWithState | null>(null);
   const [showAddProject, setShowAddProject] = useState(false);
   const [editing, setEditing] = useState<ProjectWithState | null>(null);
@@ -83,6 +83,10 @@ export default function App() {
     setEditing(null);
   };
 
+  const handleUpdateStatus = async (name: string, status: string) => {
+    await updateState(name, { stateDescription: status });
+  };
+
   const handleEdit = (name: string) => {
     const project = projects.find((p) => p.name === name);
     if (project) setEditing(project);
@@ -140,6 +144,7 @@ export default function App() {
                     onDeactivate={handleDeactivateClick}
                     onSwitch={handleSwitch}
                     onEdit={handleEdit}
+                    onUpdateStatus={handleUpdateStatus}
                   />
                 ))}
               </div>
@@ -159,6 +164,7 @@ export default function App() {
                     onActivate={handleActivate}
                     onDeactivate={handleDeactivateClick}
                     onEdit={handleEdit}
+                    onUpdateStatus={handleUpdateStatus}
                   />
                 ))}
               </div>
@@ -203,6 +209,7 @@ export default function App() {
               <PromptFeed prompts={prompts} currentProject={currentProject.name} />
             ) : (
               <TaskList
+                key={currentProject.name}
                 tasks={tasks.get(currentProject.name) ?? []}
                 projectName={currentProject.name}
               />

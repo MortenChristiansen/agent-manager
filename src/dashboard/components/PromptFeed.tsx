@@ -17,7 +17,7 @@ function PromptTooltip({ text, anchor }: { text: string; anchor: DOMRect | null 
         bottom: window.innerHeight - anchor.top + 4,
       }}
     >
-      <p className="whitespace-pre-wrap break-words leading-relaxed">"{text}"</p>
+      <p className="whitespace-pre-wrap break-words leading-relaxed">{text}</p>
     </div>
   );
 }
@@ -71,7 +71,7 @@ export function PromptFeed({ prompts, currentProject }: Props) {
             <span className="text-gray-600 font-mono shrink-0">
               {formatTime(entry.timestamp)}
             </span>
-            <p className="text-gray-500 truncate flex-1 min-w-0">"{entry.text}"</p>
+            <p className="text-gray-500 truncate flex-1 min-w-0">{entry.text}</p>
             <button
               onClick={(e) => { e.stopPropagation(); copyPrompt(entry.text, i); }}
               className="shrink-0 opacity-0 group-hover:opacity-100 text-gray-600 hover:text-gray-300 transition-opacity"

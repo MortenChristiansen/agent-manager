@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import type { ProjectWithState } from "../../shared/types";
 
 interface Props {
@@ -7,12 +8,36 @@ interface Props {
   onDeactivate: (name: string) => void;
   onSwitch?: (name: string) => void;
   onEdit?: (name: string) => void;
+  onUpdateStatus?: (name: string, status: string) => void;
 }
 
-export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch, onEdit }: Props) {
+export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch, onEdit, onUpdateStatus }: Props) {
   const { name, config, state, claudeTabs } = project;
   const isActive = state.status === "active";
   const isActivating = state.status === "activating";
+  const [editingStatus, setEditingStatus] = useState(false);
+  const [statusDraft, setStatusDraft] = useState(state.stateDescription || "");
+  const statusInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingStatus && statusInputRef.current) {
+      statusInputRef.current.focus();
+      statusInputRef.current.select();
+    }
+  }, [editingStatus]);
+
+  const saveStatus = () => {
+    const trimmed = statusDraft.trim();
+    if (onUpdateStatus && trimmed !== (state.stateDescription || "")) {
+      onUpdateStatus(name, trimmed);
+    }
+    setEditingStatus(false);
+  };
+
+  const cancelStatusEdit = () => {
+    setStatusDraft(state.stateDescription || "");
+    setEditingStatus(false);
+  };
 
   const handleCardClick = () => {
     if (isActive && !isCurrent && onSwitch) {
@@ -126,10 +151,35 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
           </p>
         )}
 
-        {/* State description */}
-        {state.stateDescription && (
-          <p className="text-xs text-gray-500 italic truncate">
+        {/* State description — click to edit */}
+        {editingStatus ? (
+          <input
+            ref={statusInputRef}
+            value={statusDraft}
+            onChange={(e) => setStatusDraft(e.target.value)}
+            onBlur={saveStatus}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveStatus();
+              if (e.key === "Escape") cancelStatusEdit();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs text-gray-300 italic w-full bg-transparent border-b border-gray-600 outline-none py-0.5 placeholder-gray-700"
+            placeholder="Where you left off…"
+          />
+        ) : state.stateDescription ? (
+          <p
+            onClick={(e) => { e.stopPropagation(); setStatusDraft(state.stateDescription); setEditingStatus(true); }}
+            className="text-xs text-gray-500 italic truncate cursor-text hover:text-gray-400 transition-colors"
+            title="Click to edit status"
+          >
             {state.stateDescription}
+          </p>
+        ) : (
+          <p
+            onClick={(e) => { e.stopPropagation(); setStatusDraft(""); setEditingStatus(true); }}
+            className="text-xs text-gray-700 italic truncate cursor-text hover:text-gray-500 transition-colors opacity-0 group-hover:opacity-100"
+          >
+            Set status…
           </p>
         )}
       </div>
