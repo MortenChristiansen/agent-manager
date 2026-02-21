@@ -94,6 +94,9 @@ export default function App() {
       <header style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} className="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0">
         <div className="flex items-center gap-2">
           <h1 className="text-sm font-bold tracking-tight">Agent Manager</h1>
+          {location.port === "5891" && (
+            <span className="text-[9px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">DEV</span>
+          )}
           <span
             className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-emerald-400" : "bg-red-400"}`}
             title={connected ? "Connected" : "Disconnected"}

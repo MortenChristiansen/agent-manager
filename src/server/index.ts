@@ -16,7 +16,7 @@ import { join } from "path";
 ensureDirs();
 
 const config = loadConfig();
-const port = config.dashboard.port;
+const port = Number(process.env.PORT) || config.dashboard.port;
 
 // Ensure .agent-project/ dirs exist so watchers + hooks work
 ensureAgentProjectDirs(config);

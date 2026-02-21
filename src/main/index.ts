@@ -64,14 +64,14 @@ app.whenReady().then(async () => {
   const iconPath = path.join(__dirname, '../../resources', iconFile);
 
   const win = new BrowserWindow({
-    title: 'Agent Manager',
+    title: isDev ? 'Agent Manager [DEV]' : 'Agent Manager',
     width: winW,
     height: winH,
-    x: screenW - winW,
+    x: isDev ? 0 : screenW - winW,
     y: Math.round((screenH - winH) / 2),
     icon: iconPath,
     frame: false,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     resizable: true,
     skipTaskbar: false,
     webPreferences: {

@@ -25,7 +25,7 @@ fi
 
 # Start backend server and Vite dev server in background
 echo "[dev-win] Starting backend server..."
-bun --watch src/server/index.ts &
+PORT=7891 bun --watch src/server/index.ts &
 SERVER_PID=$!
 
 echo "[dev-win] Starting Vite dev server..."
@@ -37,7 +37,7 @@ trap cleanup EXIT
 
 # Wait for both to be ready
 echo "[dev-win] Waiting for servers..."
-while ! curl -s http://localhost:7890 > /dev/null 2>&1; do sleep 0.5; done
+while ! curl -s http://localhost:7891 > /dev/null 2>&1; do sleep 0.5; done
 while ! curl -s http://localhost:5891 > /dev/null 2>&1; do sleep 0.5; done
 
 # Launch Electron on Windows with user-data-dir to avoid cache permission errors

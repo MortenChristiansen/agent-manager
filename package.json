@@ -5,7 +5,7 @@
   "main": "out/main/index.js",
   "scripts": {
     "dev": "concurrently \"bun run dev:server\" \"bun run dev:dashboard\"",
-    "dev:server": "bun --watch src/server/index.ts",
+    "dev:server": "PORT=7891 bun --watch src/server/index.ts",
     "dev:dashboard": "vite",
     "dev:win": "bash scripts/dev-win.sh",
     "build": "vite build && bun build src/server/index.ts --outdir dist/server --target bun",
