@@ -17,10 +17,6 @@ export function agentProjectDir(projectPath: string): string {
   return join(projectPath, ".agent-project");
 }
 
-export function agentProjectStatusPath(projectPath: string): string {
-  return join(agentProjectDir(projectPath), "status.json");
-}
-
 export function agentProjectTasksPath(projectPath: string): string {
   return join(agentProjectDir(projectPath), "tasks.json");
 }

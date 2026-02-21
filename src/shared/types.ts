@@ -68,24 +68,6 @@ export const ProjectStateSchema = z.object({
 
 export type ProjectState = z.infer<typeof ProjectStateSchema>;
 
-// --- .agent-project/status.json ---
-
-export const TabStatusSchema = z.object({
-  pid: z.number(),
-  tabName: z.string(),
-  state: z.enum(["processing", "idle", "inactive"]),
-  lastPrompt: z.string().default(""),
-  lastActivity: z.string().default(""),
-  sessionId: z.string().default(""),
-});
-
-export const AgentProjectStatusSchema = z.object({
-  tabs: z.array(TabStatusSchema).default([]),
-});
-
-export type TabStatus = z.infer<typeof TabStatusSchema>;
-export type AgentProjectStatus = z.infer<typeof AgentProjectStatusSchema>;
-
 // --- History entry ---
 
 export const HistoryEntrySchema = z.object({
@@ -104,7 +86,7 @@ export type WSMessage =
   | { type: "projectUpdate"; data: ProjectWithState }
   | { type: "prompt"; data: PromptEntry }
   | { type: "prompts"; data: PromptEntry[] }
-  | { type: "tabStatus"; project: string; data: TabStatus[] }
+  | { type: "claudeTabs"; project: string; data: string[] }
   | { type: "currentDesktop"; data: string }
   | { type: "tasks"; project: string; data: string[] };
 
@@ -112,7 +94,7 @@ export interface ProjectWithState {
   name: string;
   config: ProjectConfig;
   state: ProjectState;
-  tabs: TabStatus[];
+  claudeTabs: string[];
 }
 
 export interface PromptEntry {

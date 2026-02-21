@@ -14,15 +14,15 @@ export function runPowerShell(command: string): string {
 }
 
 /** Run a multi-line PowerShell script via -EncodedCommand (avoids quoting issues with Add-Type etc.) */
-export function runPowerShellScript(script: string): string {
+export function runPowerShellScript(script: string, quiet = false): string {
   const encoded = Buffer.from(script, "utf16le").toString("base64");
   try {
     return execSync(
       `powershell.exe -NoProfile -NonInteractive -EncodedCommand ${encoded}`,
-      { encoding: "utf-8", timeout: 15000 }
+      { encoding: "utf-8", timeout: 15000, stdio: quiet ? ["pipe", "pipe", "ignore"] : undefined }
     ).trim();
   } catch (e: any) {
-    console.error(`PowerShell error: ${e.message}`);
+    if (!quiet) console.error(`PowerShell error: ${e.message}`);
     return "";
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { WSMessage, ProjectWithState, PromptEntry, TabStatus } from "../../shared/types";
+import type { WSMessage, ProjectWithState, PromptEntry } from "../../shared/types";
 
 interface UseWebSocketReturn {
   projects: ProjectWithState[];
@@ -53,10 +53,10 @@ export function useWebSocket(): UseWebSocketReturn {
               setPrompts(msg.data.slice(0, 50));
               break;
 
-            case "tabStatus":
+            case "claudeTabs":
               setProjects((prev) =>
                 prev.map((p) =>
-                  p.name === msg.project ? { ...p, tabs: msg.data } : p
+                  p.name === msg.project ? { ...p, claudeTabs: msg.data } : p
                 )
               );
               break;

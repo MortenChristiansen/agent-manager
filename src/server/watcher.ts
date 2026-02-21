@@ -1,58 +1,14 @@
 import { watch, existsSync, readFileSync, type FSWatcher } from "fs";
 import { dirname } from "path";
 import {
-  AgentProjectStatusSchema,
   HistoryEntrySchema,
-  type TabStatus,
   type PromptEntry,
 } from "../shared/types";
-import { CLAUDE_HISTORY_PATH, agentProjectStatusPath } from "../shared/paths";
+import { CLAUDE_HISTORY_PATH } from "../shared/paths";
 
-type TabStatusCallback = (project: string, tabs: TabStatus[]) => void;
 type PromptCallback = (entry: PromptEntry) => void;
 
 const watchers: FSWatcher[] = [];
-
-export function watchAgentProjectStatus(
-  projectName: string,
-  projectPath: string,
-  onUpdate: TabStatusCallback
-): FSWatcher | null {
-  const statusPath = agentProjectStatusPath(projectPath);
-  const dir = dirname(statusPath);
-
-  if (!existsSync(dir)) return null;
-
-  // Poll-based: fs.watch is unreliable on WSL2
-  const STALE_MS = 30 * 60_000; // 30min — idle entries older than this are dropped
-  let lastBroadcast = "";
-  const poll = setInterval(() => {
-    try {
-      const raw = readFileSync(statusPath, "utf-8");
-      const parsed = AgentProjectStatusSchema.parse(JSON.parse(raw));
-      const now = Date.now();
-      const liveTabs = parsed.tabs.filter((t) => {
-        if (t.state === "processing") return true;
-        const age = now - new Date(t.lastActivity).getTime();
-        return age < STALE_MS;
-      });
-      const key = JSON.stringify(liveTabs);
-      if (key !== lastBroadcast) {
-        lastBroadcast = key;
-        onUpdate(projectName, liveTabs);
-      }
-    } catch {
-      // file may not exist yet or be mid-write
-    }
-  }, 2000);
-
-  // Return a fake FSWatcher-like object for cleanup
-  const pseudoWatcher = {
-    close: () => clearInterval(poll),
-  } as unknown as FSWatcher;
-  watchers.push(pseudoWatcher);
-  return pseudoWatcher;
-}
 
 export function loadRecentPrompts(
   count: number,

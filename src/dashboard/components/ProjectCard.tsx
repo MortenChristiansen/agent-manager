@@ -1,5 +1,4 @@
 import type { ProjectWithState } from "../../shared/types";
-import { TabStatus } from "./TabStatus";
 
 interface Props {
   project: ProjectWithState;
@@ -11,14 +10,9 @@ interface Props {
 }
 
 export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch, onEdit }: Props) {
-  const { name, config, state, tabs } = project;
+  const { name, config, state, claudeTabs } = project;
   const isActive = state.status === "active";
   const isActivating = state.status === "activating";
-
-  const activeTabs = tabs.filter((t) => t.state === "processing" || t.state === "idle");
-  const workingTabs = tabs.filter((t) => t.state === "processing");
-  const totalInstances = activeTabs.length;
-  const workingCount = workingTabs.length;
 
   const handleCardClick = () => {
     if (isActive && !isCurrent && onSwitch) {
@@ -53,17 +47,6 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <h3 className="font-semibold text-sm text-gray-100 truncate">{name}</h3>
-            {totalInstances > 0 && (
-              <span
-                className={`shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                  workingCount === totalInstances
-                    ? "text-emerald-400 bg-emerald-400/10"
-                    : "text-amber-400 bg-amber-400/10"
-                }`}
-              >
-                {workingCount}/{totalInstances}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-1">
             {onEdit && (
@@ -124,10 +107,15 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
           </p>
         )}
 
-        {/* Tab status (active only) */}
-        {isActive && config.terminal.tabs.length > 0 && (
-          <div className="mb-1.5">
-            <TabStatus configuredTabs={config.terminal.tabs} liveTabs={tabs} />
+        {/* Active Claude tabs */}
+        {claudeTabs.length > 0 && (
+          <div className="mb-1.5 space-y-0.5">
+            {claudeTabs.map((title, i) => (
+              <div key={i} className="flex items-center gap-1.5 text-xs">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-amber-400 animate-pulse" />
+                <span className="text-amber-400 truncate">{title}</span>
+              </div>
+            ))}
           </div>
         )}
 

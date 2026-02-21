@@ -5,10 +5,8 @@ import {
   type ProjectState,
   type GlobalConfig,
   type ProjectWithState,
-  type TabStatus,
-  AgentProjectStatusSchema,
 } from "../shared/types";
-import { projectStatePath, agentProjectStatusPath, agentProjectTasksPath } from "../shared/paths";
+import { projectStatePath, agentProjectTasksPath } from "../shared/paths";
 import { ensureDirs } from "./config";
 
 const DEFAULT_STATE: ProjectState = {
@@ -54,27 +52,6 @@ export function saveProjectState(name: string, state: ProjectState) {
   writeFileSync(projectStatePath(name), YAML.stringify(persisted), "utf-8");
 }
 
-const STALE_MS = 30 * 60_000;
-
-export function loadTabStatus(projectPath: string): TabStatus[] {
-  const statusPath = agentProjectStatusPath(projectPath);
-  if (!existsSync(statusPath)) return [];
-
-  try {
-    const raw = readFileSync(statusPath, "utf-8");
-    const parsed = JSON.parse(raw);
-    const status = AgentProjectStatusSchema.parse(parsed);
-    const now = Date.now();
-    return status.tabs.filter((t) => {
-      if (t.state === "processing") return true;
-      const age = now - new Date(t.lastActivity).getTime();
-      return age < STALE_MS;
-    });
-  } catch {
-    return [];
-  }
-}
-
 export function loadTasks(projectPath: string): string[] {
   const tasksPath = agentProjectTasksPath(projectPath);
   if (!existsSync(tasksPath)) return [];
@@ -91,6 +68,17 @@ export function saveTasks(projectPath: string, tasks: string[]) {
   writeFileSync(agentProjectTasksPath(projectPath), JSON.stringify(tasks, null, 2), "utf-8");
 }
 
+// In-memory cache of active Claude tab titles per project (set by terminal tab poller)
+const claudeTabsCache = new Map<string, string[]>();
+
+export function getClaudeTabs(name: string): string[] {
+  return claudeTabsCache.get(name) ?? [];
+}
+
+export function setClaudeTabs(name: string, tabs: string[]) {
+  claudeTabsCache.set(name, tabs);
+}
+
 export function buildProjectsWithState(
   config: GlobalConfig
 ): ProjectWithState[] {
@@ -98,6 +86,6 @@ export function buildProjectsWithState(
     name,
     config: projectConfig,
     state: loadProjectState(name),
-    tabs: loadTabStatus(projectConfig.path),
+    claudeTabs: getClaudeTabs(name),
   }));
 }

@@ -12,8 +12,6 @@ export function DeactivationModal({ project, onConfirm, onCancel }: Props) {
     project.state.stateDescription
   );
 
-  const activeTabs = project.tabs.filter((t) => t.state === "processing");
-
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-4">
@@ -21,14 +19,14 @@ export function DeactivationModal({ project, onConfirm, onCancel }: Props) {
           Deactivate {project.name}
         </h3>
 
-        {activeTabs.length > 0 && (
+        {project.claudeTabs.length > 0 && (
           <div className="mb-3 p-2 rounded bg-amber-400/10 border border-amber-400/20">
             <p className="text-xs text-amber-400 font-medium mb-1">
-              Active tabs:
+              Active Claude sessions:
             </p>
-            {activeTabs.map((tab) => (
-              <p key={tab.tabName} className="text-xs text-amber-300/80 pl-2">
-                {tab.tabName}: {tab.lastPrompt || "processing"}
+            {project.claudeTabs.map((title, i) => (
+              <p key={i} className="text-xs text-amber-300/80 pl-2 truncate">
+                {title}
               </p>
             ))}
           </div>

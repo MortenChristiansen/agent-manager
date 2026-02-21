@@ -136,3 +136,12 @@ ${closeStatements}
 export function pinWindow(titleFragment: string): string {
   return run(`"/PinWindowHandle:${titleFragment}"`);
 }
+
+/** Get all window handles on a named virtual desktop */
+export function listWindowsOnDesktop(desktopName: string): string[] {
+  const output = run(`/ListWindowsOnDesktop:${desktopName}`);
+  return output
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter((s) => /^\d+$/.test(s));
+}

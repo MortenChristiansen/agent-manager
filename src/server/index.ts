@@ -10,6 +10,7 @@ import { handleApiRequest } from "./api/routes";
 import { addClient, removeClient, broadcast } from "./api/websocket";
 import { getCurrentDesktopName, listDesktopNames } from "./desktop";
 import { registerProjectWatcher, projectPathToName } from "./projectRegistry";
+import { pollClaudeTabs } from "./terminalTabs";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
@@ -37,12 +38,13 @@ for (const name of Object.keys(config.projects)) {
   }
 }
 
-// --- File watchers ---
+// --- Register project path→name mappings ---
 
-// Watch .agent-project/status.json for each project
 for (const [name, project] of Object.entries(config.projects)) {
   registerProjectWatcher(name, project.path);
 }
+
+// --- File watchers ---
 
 watchPromptHistory((entry) => {
   broadcast({ type: "prompt", data: entry });
@@ -96,6 +98,10 @@ function pollDesktop() {
 }
 
 setInterval(pollDesktop, 1000);
+
+// --- Terminal tab title polling (3s) ---
+
+setInterval(() => pollClaudeTabs(loadConfig, broadcast), 3000);
 
 // --- Serve dashboard static files in production ---
 
