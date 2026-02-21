@@ -30,17 +30,4 @@ if [ ! -d "$WIN_DIR/node_modules/electron" ]; then
   powershell.exe -NoProfile -Command "cd '$WIN_PATH'; npm install --save-dev electron"
 fi
 
-# Create desktop shortcut
-echo "[deploy] Creating desktop shortcut..."
-powershell.exe -NoProfile -Command "
-  \$ws = New-Object -ComObject WScript.Shell
-  \$desktop = \$ws.SpecialFolders('Desktop')
-  \$lnk = \$ws.CreateShortcut(\"\$desktop\\Agent Manager.lnk\")
-  \$lnk.TargetPath = '$WIN_PATH\\node_modules\\electron\\dist\\electron.exe'
-  \$lnk.Arguments = '. --user-data-dir=electron-data'
-  \$lnk.WorkingDirectory = '$WIN_PATH'
-  \$lnk.IconLocation = '$WIN_PATH\\resources\\icon.ico'
-  \$lnk.Save()
-"
-
-echo "[deploy] Done. Shortcut created on Desktop."
+echo "[deploy] Done."
