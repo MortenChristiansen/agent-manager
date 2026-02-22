@@ -65,6 +65,14 @@ export function useWebSocket(): UseWebSocketReturn {
               setCurrentDesktop(msg.data);
               break;
 
+            case "prInfo":
+              setProjects((prev) =>
+                prev.map((p) =>
+                  p.name === msg.project ? { ...p, prInfo: msg.data } : p
+                )
+              );
+              break;
+
             case "tasks":
               setTasks((prev) => {
                 const next = new Map(prev);

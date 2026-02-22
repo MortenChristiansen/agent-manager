@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch, onEdit, onUpdateStatus }: Props) {
-  const { name, config, state, claudeTabs } = project;
+  const { name, config, state, claudeTabs, prInfo } = project;
   const isActive = state.status === "active";
   const isActivating = state.status === "activating";
   const [editingStatus, setEditingStatus] = useState(false);
@@ -151,6 +151,38 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
           </p>
         )}
 
+        {/* PR + CodeRabbit badges */}
+        {prInfo && (
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <a
+              href={prInfo.prUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[10px] font-mono px-1.5 py-0.5 rounded text-blue-400 bg-blue-400/10 hover:bg-blue-400/20 transition-colors"
+            >
+              PR #{prInfo.prNumber}
+            </a>
+            {prInfo.coderabbit && (
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                  prInfo.coderabbit.status === "approved"
+                    ? "text-emerald-400 bg-emerald-400/10"
+                    : prInfo.coderabbit.status === "tentative"
+                    ? "text-yellow-400 bg-yellow-400/10"
+                    : "text-amber-400 bg-amber-400/10"
+                }`}
+              >
+                {prInfo.coderabbit.status === "approved"
+                  ? "🐰 ✓"
+                  : prInfo.coderabbit.status === "tentative"
+                  ? "🐰 ✓?"
+                  : "🐰 …"}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* State description — click to edit */}
         {editingStatus ? (
           <input
@@ -169,7 +201,7 @@ export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSw
         ) : state.stateDescription ? (
           <p
             onClick={(e) => { e.stopPropagation(); setStatusDraft(state.stateDescription); setEditingStatus(true); }}
-            className="text-xs text-gray-500 italic truncate cursor-text hover:text-gray-400 transition-colors"
+            className="text-xs text-gray-500 italic cursor-text hover:text-gray-400 transition-colors break-words"
             title="Click to edit status"
           >
             {state.stateDescription}

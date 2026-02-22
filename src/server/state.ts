@@ -5,6 +5,7 @@ import {
   type ProjectState,
   type GlobalConfig,
   type ProjectWithState,
+  type PrInfo,
 } from "../shared/types";
 import { projectStatePath, agentProjectTasksPath } from "../shared/paths";
 import { ensureDirs } from "./config";
@@ -79,6 +80,17 @@ export function setClaudeTabs(name: string, tabs: string[]) {
   claudeTabsCache.set(name, tabs);
 }
 
+// In-memory cache of PR info per project
+const prInfoCache = new Map<string, PrInfo | null>();
+
+export function getPrInfoCached(name: string): PrInfo | null {
+  return prInfoCache.get(name) ?? null;
+}
+
+export function setPrInfoCached(name: string, info: PrInfo | null) {
+  prInfoCache.set(name, info);
+}
+
 export function buildProjectsWithState(
   config: GlobalConfig
 ): ProjectWithState[] {
@@ -87,5 +99,6 @@ export function buildProjectsWithState(
     config: projectConfig,
     state: loadProjectState(name),
     claudeTabs: getClaudeTabs(name),
+    prInfo: getPrInfoCached(name),
   }));
 }

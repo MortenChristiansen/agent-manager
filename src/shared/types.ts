@@ -88,13 +88,21 @@ export type WSMessage =
   | { type: "prompts"; data: PromptEntry[] }
   | { type: "claudeTabs"; project: string; data: string[] }
   | { type: "currentDesktop"; data: string }
-  | { type: "tasks"; project: string; data: string[] };
+  | { type: "tasks"; project: string; data: string[] }
+  | { type: "prInfo"; project: string; data: PrInfo | null };
+
+export interface PrInfo {
+  prNumber: number;
+  prUrl: string;
+  coderabbit: { reviewed: boolean; status: "active" | "approved" | "tentative" } | null;
+}
 
 export interface ProjectWithState {
   name: string;
   config: ProjectConfig;
   state: ProjectState;
   claudeTabs: string[];
+  prInfo: PrInfo | null;
 }
 
 export interface PromptEntry {

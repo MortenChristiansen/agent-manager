@@ -1,6 +1,7 @@
 import { loadConfig, ensureDirs, ensureAgentProjectDirs } from "./config";
-import { buildProjectsWithState, loadProjectState, saveProjectState, setProjectStatus, loadTasks } from "./state";
+import { buildProjectsWithState, loadProjectState, saveProjectState, setProjectStatus, loadTasks, getPrInfoCached, setPrInfoCached } from "./state";
 import { getGitInfo } from "./git";
+import { getPrInfo } from "./github";
 import {
   watchPromptHistory,
   loadRecentPrompts,
@@ -80,6 +81,42 @@ async function pollGit() {
 setInterval(pollGit, GIT_POLL_INTERVAL);
 // Initial poll
 pollGit();
+
+// --- GitHub PR polling (60s) ---
+
+const GH_POLL_INTERVAL = 60_000;
+
+async function pollGitHub() {
+  const config = loadConfig();
+  for (const [name, project] of Object.entries(config.projects)) {
+    const state = loadProjectState(name);
+    const isActive = state.status === "active";
+    const branch = state.gitBranch;
+    const isMainBranch = !branch || branch === "main" || branch === "master";
+
+    if (!isActive || isMainBranch) {
+      // Clear cache if project dormant or on main
+      const prev = getPrInfoCached(name);
+      if (prev !== null) {
+        setPrInfoCached(name, null);
+        broadcast({ type: "prInfo", project: name, data: null });
+      }
+      continue;
+    }
+
+    const info = getPrInfo(project.path);
+    const prev = getPrInfoCached(name);
+    const changed = JSON.stringify(info) !== JSON.stringify(prev);
+
+    if (changed) {
+      setPrInfoCached(name, info);
+      broadcast({ type: "prInfo", project: name, data: info });
+    }
+  }
+}
+
+setInterval(pollGitHub, GH_POLL_INTERVAL);
+pollGitHub();
 
 // --- Desktop polling (1s) ---
 
