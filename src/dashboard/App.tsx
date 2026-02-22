@@ -17,6 +17,8 @@ export default function App() {
   const [showAddProject, setShowAddProject] = useState(false);
   const [editing, setEditing] = useState<ProjectWithState | null>(null);
   const [bottomTab, setBottomTab] = useState<"prompts" | "tasks">("prompts");
+  const [activatingLocal, setActivatingLocal] = useState<Set<string>>(new Set());
+  const [inactiveOpen, setInactiveOpen] = useState(true);
 
   const { active, dormant } = sortProjects(projects);
 
@@ -26,7 +28,17 @@ export default function App() {
   );
 
   const handleActivate = async (name: string) => {
-    await activate(name);
+    if (activatingLocal.has(name)) return;
+    setActivatingLocal((prev) => new Set(prev).add(name));
+    try {
+      await activate(name);
+    } finally {
+      setActivatingLocal((prev) => {
+        const next = new Set(prev);
+        next.delete(name);
+        return next;
+      });
+    }
   };
 
   const handleDeactivateClick = (name: string) => {
@@ -140,6 +152,7 @@ export default function App() {
                     key={p.name}
                     project={p}
                     isCurrent={currentProject?.name === p.name}
+                    activatingLocal={activatingLocal.has(p.name)}
                     onActivate={handleActivate}
                     onDeactivate={handleDeactivateClick}
                     onSwitch={handleSwitch}
@@ -153,20 +166,45 @@ export default function App() {
 
           {dormant.length > 0 && (
             <section>
-              <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
-                Inactive
-              </h2>
-              <div className="space-y-2">
-                {dormant.map((p) => (
-                  <ProjectCard
-                    key={p.name}
-                    project={p}
-                    onActivate={handleActivate}
-                    onDeactivate={handleDeactivateClick}
-                    onEdit={handleEdit}
-                    onUpdateStatus={handleUpdateStatus}
+              <button
+                onClick={() => setInactiveOpen((o) => !o)}
+                className="flex items-center gap-1 mb-2 group"
+              >
+                <svg
+                  className={`w-3 h-3 text-gray-600 transition-transform ${inactiveOpen ? "rotate-90" : ""}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                    clipRule="evenodd"
                   />
-                ))}
+                </svg>
+                <h2 className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest group-hover:text-gray-400 transition-colors">
+                  Inactive
+                </h2>
+                <span className="text-[10px] text-gray-600">{dormant.length}</span>
+              </button>
+              <div
+                className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+                style={{ gridTemplateRows: inactiveOpen ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden">
+                  <div className="space-y-2">
+                    {dormant.map((p) => (
+                      <ProjectCard
+                        key={p.name}
+                        project={p}
+                        activatingLocal={activatingLocal.has(p.name)}
+                        onActivate={handleActivate}
+                        onDeactivate={handleDeactivateClick}
+                        onEdit={handleEdit}
+                        onUpdateStatus={handleUpdateStatus}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
           )}
