@@ -3,3 +3,4 @@ dist/
 *.tsbuildinfo
 .agent-project/
 out/
+.env.local

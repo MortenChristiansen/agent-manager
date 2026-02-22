@@ -4,6 +4,7 @@ import type { ProjectWithState } from "../../shared/types";
 interface Props {
   project: ProjectWithState;
   isCurrent?: boolean;
+  activatingLocal?: boolean;
   onActivate: (name: string) => void;
   onDeactivate: (name: string) => void;
   onSwitch?: (name: string) => void;
@@ -11,10 +12,10 @@ interface Props {
   onUpdateStatus?: (name: string, status: string) => void;
 }
 
-export function ProjectCard({ project, isCurrent, onActivate, onDeactivate, onSwitch, onEdit, onUpdateStatus }: Props) {
+export function ProjectCard({ project, isCurrent, activatingLocal, onActivate, onDeactivate, onSwitch, onEdit, onUpdateStatus }: Props) {
   const { name, config, state, claudeTabs, prInfo } = project;
   const isActive = state.status === "active";
-  const isActivating = state.status === "activating";
+  const isActivating = state.status === "activating" || !!activatingLocal;
   const [editingStatus, setEditingStatus] = useState(false);
   const [statusDraft, setStatusDraft] = useState(state.stateDescription || "");
   const statusInputRef = useRef<HTMLInputElement>(null);

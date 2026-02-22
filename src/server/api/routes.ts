@@ -154,6 +154,11 @@ export async function handleApiRequest(
       return Response.json({ error: "Project not found" }, { status: 404 });
     }
 
+    const currentStatus = loadProjectState(name).status;
+    if (currentStatus === "activating" || currentStatus === "active") {
+      return Response.json({ error: "Already active" }, { status: 409 });
+    }
+
     // Broadcast activating state immediately so UI shows loading
     setProjectStatus(name, "activating");
     const earlyState = loadProjectState(name);
